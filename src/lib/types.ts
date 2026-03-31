@@ -109,3 +109,64 @@ export interface AuditMetadata {
   geolocation: GeoLocation | null
   device_info: DeviceInfo
 }
+
+export type PersonType = 'natural' | 'juridica'
+export type ContactCategory = 'lead' | 'prospecto' | 'cliente' | 'inactivo'
+
+export interface Contact {
+  id: string
+  tipo_persona: PersonType
+  nombre_completo: string | null
+  tipo_documento: string | null
+  numero_documento: string | null
+  empresa: string | null
+  id_fiscal: string | null
+  sigla: string | null
+  representante_legal: string | null
+  tipo_documento_representante: string | null
+  numero_documento_representante: string | null
+  email: string | null
+  telefono: string | null
+  celular: string | null
+  direccion: string | null
+  ciudad: string | null
+  departamento: string | null
+  pais: string
+  web_redes: string | null
+  persona_encargada: string | null
+  email_encargada: string | null
+  celular_encargada: string | null
+  categoria: ContactCategory
+  etiquetas: string[]
+  notas: string | null
+  fuente: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  // From view
+  display_name?: string
+  total_contratos?: number
+  contratos_firmados?: number
+  contratos_pendientes?: number
+  ultimo_contrato?: string | null
+}
+
+export type PaymentStatus = 'pendiente' | 'pagado' | 'vencido' | 'cancelado'
+
+export interface PaymentInstallment {
+  id: string
+  contract_id: string
+  numero_cuota: number
+  descripcion: string | null
+  monto: number
+  moneda: string
+  fecha_vencimiento: string
+  estado: PaymentStatus
+  fecha_pago: string | null
+  metodo_pago: string | null
+  comprobante_url: string | null
+  notas: string | null
+  recordatorio_enviado: boolean
+  created_at: string
+  updated_at: string
+}

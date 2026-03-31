@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, ScrollText, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, FileText, ScrollText, Users, LogOut, Menu, X } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/templates', label: 'Plantillas', icon: FileText },
   { path: '/contracts', label: 'Contratos', icon: ScrollText },
+  { path: '/contacts', label: 'Contactos', icon: Users },
 ]
 
 export function AppLayout() {
@@ -59,7 +60,7 @@ export function AppLayout() {
       <button
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-[hsl(var(--background))] border"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+        aria-label={sidebarOpen ? 'Cerrar menu' : 'Abrir menu'}
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -72,10 +73,10 @@ export function AppLayout() {
         <div className="flex flex-col h-full">
           <div className="p-6 border-b">
             <h1 className="text-lg font-bold text-[hsl(var(--foreground))]">Contratos Effix</h1>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">Sistema de Gestión</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">Sistema de Gestion</p>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1" aria-label="Navegación principal">
+          <nav className="flex-1 p-4 space-y-1" aria-label="Navegacion principal">
             {navItems.map(({ path, label, icon: Icon }) => (
               <NavLink
                 key={path}
@@ -103,10 +104,10 @@ export function AppLayout() {
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] transition-colors"
-              aria-label="Cerrar sesión"
+              aria-label="Cerrar sesion"
             >
               <LogOut size={16} aria-hidden="true" />
-              Cerrar sesión
+              Cerrar sesion
             </button>
           </div>
         </div>

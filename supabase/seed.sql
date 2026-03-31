@@ -1,330 +1,734 @@
 -- ================================================
 -- Seed: Templates de contrato para Feria Effix
--- Versión 2: soporte persona natural/jurídica,
---            internacional, sin variables de organizador
+-- Versión 3: lenguaje legal exacto de los contratos
+--            originales EFFIX SAS
 -- ================================================
 
--- Limpiar templates anteriores
 DELETE FROM contract_templates;
 
 -- ================================================
--- Template 1: Contrato de Ponente
+-- Template 1: Contrato de Ponente (Prestación de Servicios)
 -- ================================================
 INSERT INTO contract_templates (name, slug, description, content, variables) VALUES (
   'Contrato de Ponente',
   'ponente-effix',
   'Contrato de prestación de servicios para ponentes/speakers de la Feria Effix',
-  '<div class="contract" style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.8; color: #333;">
-  <div style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-size: 24px; margin-bottom: 8px;">CONTRATO DE PRESTACIÓN DE SERVICIOS</h1>
-    <h2 style="font-size: 18px; color: #666;">PONENTE - FERIA EFFIX {{anio}}</h2>
+  '<div style="font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 48px 56px; line-height: 1.9; color: #1a1a1a; font-size: 14px;">
+
+  <div style="text-align: center; margin-bottom: 48px; border-bottom: 2px solid #1a1a1a; padding-bottom: 32px;">
+    <h1 style="font-size: 20px; font-weight: bold; letter-spacing: 1px; margin: 0 0 8px 0; text-transform: uppercase;">CONTRATO DE PRESTACIÓN DE SERVICIOS</h1>
+    <h2 style="font-size: 16px; font-weight: normal; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">FERIA EFFIX {{anio}}</h2>
   </div>
 
-  <p>Entre los suscritos, a saber: <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento_tipo}} No. {{org_documento}}, actuando en calidad de representante legal de <strong>{{org_empresa}}</strong>, identificada con NIT {{org_nit}}, en adelante EL ORGANIZADOR; y
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">GENERALIDADES</h3>
+
+  <p style="text-align: justify; margin-bottom: 16px;">La Feria Effix es el evento de comercio electrónico MÁS GRANDE DEL MUNDO y tendrá lugar en las instalaciones de Plaza Mayor Medellín, Colombia, del 16 al 18 de octubre de {{anio}}, reuniendo a los líderes, emprendedores, marcas y empresas más importantes del ecosistema digital de habla hispana.</p>
+
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de prestación de servicios se celebra entre:</p>
+
+  <p style="text-align: justify; margin-bottom: 16px;"><strong>EL CONTRATANTE:</strong> <strong>{{org_empresa}}</strong>, identificada con NIT {{org_nit}}, representada en este acto por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en su calidad de Representante Legal, con dirección {{org_direccion}}, ciudad de {{org_ciudad}}, correo electrónico {{org_email}}, teléfono {{org_telefono}}. En adelante denominado <strong>EL CONTRATANTE</strong>.</p>
 
   {{#if empresa}}
-  <strong>{{empresa}}</strong>, identificada con {{id_fiscal}}, representada en este acto por <strong>{{representante_legal}}</strong>, identificado(a) con {{tipo_documento_representante}} No. {{numero_documento_representante}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
+  <p style="text-align: justify; margin-bottom: 24px;"><strong>EL CONTRATISTA:</strong> <strong>{{empresa}}</strong>, identificada con {{id_fiscal}}, representada en este acto por <strong>{{representante_legal}}</strong>, identificado(a) con {{tipo_documento_representante}} No. {{numero_documento_representante}}{{#if pais}}, de nacionalidad {{pais}}{{/if}}, correo electrónico {{email_contratista}}, teléfono {{telefono_contratista}}. En adelante denominado <strong>EL CONTRATISTA</strong>.</p>
   {{else}}
-  <strong>{{nombre_completo}}</strong>, identificado(a) con {{tipo_documento}} No. {{numero_documento}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
+  <p style="text-align: justify; margin-bottom: 24px;"><strong>EL CONTRATISTA:</strong> <strong>{{nombre_completo}}</strong>, identificado(a) con {{tipo_documento}} No. {{numero_documento}}{{#if pais}}, de nacionalidad {{pais}}{{/if}}, correo electrónico {{email_contratista}}, teléfono {{telefono_contratista}}. En adelante denominado <strong>EL CONTRATISTA</strong>.</p>
   {{/if}}
 
-  en adelante EL PONENTE, se celebra el presente contrato de prestación de servicios, el cual se regirá por las siguientes cláusulas:</p>
+  <p style="text-align: justify; margin-bottom: 24px;">Las partes, de común acuerdo, han decidido celebrar el presente Contrato de Prestación de Servicios, el cual se regirá por las siguientes cláusulas:</p>
 
-  <h3 style="margin-top: 30px;">CLÁUSULA PRIMERA - OBJETO</h3>
-  <p>EL PONENTE se compromete a realizar una presentación/conferencia sobre el tema: <strong>"{{tema_charla}}"</strong>, en el marco de la Feria Effix {{anio}}, que se llevará a cabo en {{lugar_evento}}, el día {{fecha_charla}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">PRIMERA. OBJETO</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONTRATISTA se compromete a realizar una conferencia de carácter académico, técnico, personal y/o profesional en el marco de la Feria Effix {{anio}}, que se llevará a cabo en {{org_lugar_evento}}.</p>
+  <p style="text-align: justify; margin-bottom: 24px;"><strong>Parágrafo:</strong> La fecha y hora exacta de la conferencia será acordada entre las partes con posterioridad a la firma del presente contrato, y comunicada al CONTRATISTA con la debida antelación.</p>
 
-  <h3>CLÁUSULA SEGUNDA - OBLIGACIONES DEL PONENTE</h3>
-  <p>EL PONENTE se obliga a:</p>
-  <ol>
-    <li>Presentarse en el lugar del evento el día {{fecha_charla}} a las {{hora_inicio}}, con una antelación mínima de 30 minutos.</li>
-    <li>Realizar la presentación en el horario acordado: de {{hora_inicio}} a {{hora_fin}}.</li>
-    <li>Entregar el material de presentación con al menos 48 horas de anticipación al evento.</li>
-    <li>Cumplir con las normas y reglamentos establecidos por EL ORGANIZADOR para el evento.</li>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEGUNDA. OBLIGACIONES DEL CONTRATISTA</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONTRATISTA se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Enviar una fotografía profesional para efectos de difusión y comunicación del evento.</li>
+    <li style="margin-bottom: 8px;">Preparar y desarrollar su presentación de manera óptima para el público asistente.</li>
+    <li style="margin-bottom: 8px;">Atender las preguntas del público durante el tiempo asignado para tal fin.</li>
+    <li style="margin-bottom: 8px;">Remitir el material de presentación al CONTRATANTE con la debida antelación, conforme a las instrucciones que se le impartan.</li>
+    <li style="margin-bottom: 8px;">Podrá apoyar voluntariamente en otras actividades del evento, sin que ello genere obligación adicional de remuneración.</li>
+    <li style="margin-bottom: 8px;">Informar al CONTRATANTE, con un mínimo de cinco (5) días hábiles de anticipación, cualquier circunstancia que le impida asistir al evento.</li>
+    <li style="margin-bottom: 8px;">Dispensar un trato respetuoso y cordial al equipo organizador, al público y a los demás participantes del evento.</li>
+    <li style="margin-bottom: 8px;">Abstenerse de realizar publicidad comercial de sus productos o servicios durante su intervención, sin autorización previa y escrita del CONTRATANTE. Sin perjuicio de lo anterior, al cierre de su presentación podrá compartir su nombre y redes sociales personales o profesionales.</li>
+    <li style="margin-bottom: 8px;">Ser puntual en el horario asignado para su conferencia.</li>
   </ol>
 
-  <h3>CLÁUSULA TERCERA - CONTRAPRESTACIÓN</h3>
-  <p>EL ORGANIZADOR pagará a EL PONENTE la suma de <strong>{{honorarios}} {{moneda}}</strong> ({{honorarios_letras}}), por concepto de honorarios por la prestación del servicio descrito. El pago se realizará de la siguiente manera: {{forma_pago}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">TERCERA. OBLIGACIONES DEL CONTRATANTE</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONTRATANTE se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Prestar la colaboración necesaria para el adecuado cumplimiento del objeto contractual.</li>
+    <li style="margin-bottom: 8px;">Suministrar las plantillas de presentación oficiales del evento.</li>
+    <li style="margin-bottom: 8px;">Ofrecer al CONTRATISTA hasta dos (2) sesiones de capacitación formativas de carácter voluntario, sin costo adicional.</li>
+    <li style="margin-bottom: 8px;">Cumplir con la remuneración pactada en los términos y condiciones establecidos en el presente contrato.</li>
+  </ol>
 
-  <h3>CLÁUSULA CUARTA - PROPIEDAD INTELECTUAL</h3>
-  <p>EL PONENTE autoriza a EL ORGANIZADOR a grabar, fotografiar y transmitir la presentación por medios digitales, así como a utilizar el material para fines promocionales del evento.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CUARTA. REMUNERACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">Como contraprestación por los servicios objeto del presente contrato, EL CONTRATANTE pagará a EL CONTRATISTA la suma de <strong>{{honorarios}} {{moneda}}</strong> ({{honorarios_letras}}). La forma de pago será la siguiente: {{forma_pago}}.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1:</strong> EL CONTRATANTE no iniciará el proceso de pago del segundo desembolso sin antes haber verificado su efectivo recibo. El CONTRATISTA deberá confirmar la recepción del pago correspondiente.</p>
+  <p style="text-align: justify; margin-bottom: 24px;"><strong>Parágrafo 2:</strong> En caso de incumplimiento de las obligaciones por parte de EL CONTRATISTA, EL CONTRATANTE podrá dar por terminado unilateralmente el presente contrato y retener los valores pagados a título de cláusula penal, sin perjuicio de las acciones legales a que haya lugar.</p>
 
-  <h3>CLÁUSULA QUINTA - CONFIDENCIALIDAD</h3>
-  <p>Las partes se comprometen a mantener confidencialidad sobre los términos económicos del presente contrato.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">QUINTA. INASISTENCIA JUSTIFICADA</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">Si EL CONTRATISTA no pudiere cumplir con su obligación de participar en el evento por causa de fuerza mayor o caso fortuito debidamente acreditado, deberá comunicarlo al CONTRATANTE con un mínimo de cinco (5) días hábiles de anticipación a la fecha del evento.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1:</strong> En caso de inasistencia justificada, EL CONTRATISTA deberá devolver el anticipo recibido dentro de los cinco (5) días hábiles siguientes a la comunicación de la inasistencia.</p>
+  <p style="text-align: justify; margin-bottom: 24px;"><strong>Parágrafo 2:</strong> EL CONTRATISTA se compromete a grabar un video breve explicando su inasistencia, el cual deberá ser remitido al CONTRATANTE con un mínimo de veinticuatro (24) horas de anterioridad al evento, para efectos de comunicación con los asistentes.</p>
 
-  <h3>CLÁUSULA SEXTA - CANCELACIÓN</h3>
-  <p>En caso de cancelación por parte de EL PONENTE con menos de 15 días de anticipación, este deberá reembolsar cualquier anticipo recibido. Si la cancelación es por parte de EL ORGANIZADOR, se pagará al PONENTE el 50% de los honorarios acordados.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEXTA. DURACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato tendrá vigencia desde la fecha de su suscripción y hasta la culminación de la participación del CONTRATISTA en el evento, conforme al objeto pactado.</p>
 
-  <h3>CLÁUSULA SÉPTIMA - LEGISLACIÓN APLICABLE</h3>
-  <p>El presente contrato se rige por las leyes de la República de Colombia.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SÉPTIMA. PROPIEDAD INTELECTUAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONTRATISTA conserva los derechos morales sobre los contenidos de su presentación. No obstante, cede a EL CONTRATANTE los derechos patrimoniales de autor sobre los materiales generados en el marco de la ejecución del presente contrato, para efectos de promoción, difusión comercial y archivo institucional del evento, sin limitación de tiempo ni de territorio.</p>
 
-  <p style="margin-top: 40px;">Para constancia se firma electrónicamente en la fecha indicada, de conformidad con la Ley 527 de 1999 y el Decreto 2364 de 2012.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">OCTAVA. USO DE IMAGEN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONTRATISTA autoriza expresamente a EL CONTRATANTE para grabar, fotografiar y/o reproducir fragmentos de su participación en el evento, y para utilizar dichos contenidos en los canales oficiales de comunicación del CONTRATANTE, de forma gratuita, tanto a nivel nacional como internacional, sin limitación de tiempo.</p>
 
-  <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">NOVENA. TRATAMIENTO DE INFORMACIÓN PERSONAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Los datos personales suministrados por EL CONTRATISTA serán tratados conforme a lo dispuesto en la Ley 1581 de 2012 y el Decreto 1377 de 2013, o las normas que los sustituyan, modifiquen o complementen. EL CONTRATANTE garantiza la confidencialidad y el uso adecuado de dicha información.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA. FIRMA ELECTRÓNICA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Las partes aceptan que el presente contrato podrá ser suscrito mediante firma electrónica, de conformidad con lo establecido en la Ley 527 de 1999 y sus decretos reglamentarios, la cual tendrá plena validez y eficacia jurídica.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA PRIMERA. CESIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Ninguna de las partes podrá ceder los derechos u obligaciones derivados del presente contrato sin la autorización previa y escrita de la otra parte.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SEGUNDA. NOTIFICACIONES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Para todos los efectos legales y contractuales, las partes fijan como canales de notificación los siguientes: EL CONTRATANTE recibirá comunicaciones en el correo electrónico gerencia@feriaeffix.com y/o al teléfono 320 6556725. EL CONTRATISTA recibirá comunicaciones en el correo electrónico {{email_contratista}} y/o al teléfono {{telefono_contratista}}.</p>
+
+  <p style="text-align: justify; margin-top: 40px; margin-bottom: 40px;">En constancia de lo anterior, las partes suscriben el presente contrato de forma electrónica, de conformidad con la Ley 527 de 1999, en la fecha indicada en el sistema de firma electrónica.</p>
+
+  <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL ORGANIZADOR</strong></p>
-      <p>{{org_nombre}}</p>
-      <p>{{org_documento_tipo}} {{org_documento}}</p>
-      <p>{{org_empresa}}</p>
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONTRATANTE</p>
+        <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_documento}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_empresa}}</p>
+        <p style="margin: 0 0 4px 0;">NIT: {{org_nit}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_ciudad}}</p>
+      </div>
     </div>
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL PONENTE</strong></p>
-      {{#if empresa}}
-      <p>{{representante_legal}}</p>
-      <p>{{tipo_documento_representante}} {{numero_documento_representante}}</p>
-      <p>{{empresa}} &mdash; {{id_fiscal}}</p>
-      {{else}}
-      <p>{{nombre_completo}}</p>
-      <p>{{tipo_documento}} {{numero_documento}}</p>
-      {{#if pais}}<p>Nacionalidad: {{pais}}</p>{{/if}}
-      {{/if}}
-      <div id="signature-placeholder" style="min-height: 80px; border: 1px dashed #ccc; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
-        [Firma electrónica]
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONTRATISTA</p>
+        {{#if empresa}}
+        <p style="margin: 0 0 4px 0;">{{representante_legal}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento_representante}} No. {{numero_documento_representante}}</p>
+        <p style="margin: 0 0 4px 0;">{{empresa}}</p>
+        <p style="margin: 0 0 4px 0;">{{id_fiscal}}</p>
+        {{else}}
+        <p style="margin: 0 0 4px 0;">{{nombre_completo}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
+        {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
+        {{/if}}
+        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
+          [Firma electrónica]
+        </div>
       </div>
     </div>
   </div>
+
 </div>',
   '[
     {"key": "tipo_persona", "label": "Tipo de persona", "type": "select", "required": true, "options": ["Persona Natural", "Persona Jurídica"]},
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
+    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
-    {"key": "representante_legal", "label": "Nombre del representante legal (persona jurídica)", "type": "text", "required": false},
+    {"key": "representante_legal", "label": "Nombre del representante legal", "type": "text", "required": false},
     {"key": "tipo_documento_representante", "label": "Tipo documento del representante", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento_representante", "label": "Número documento del representante", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
-    {"key": "tema_charla", "label": "Tema de la charla", "type": "text", "required": true},
-    {"key": "fecha_charla", "label": "Fecha de la charla", "type": "date", "required": true},
-    {"key": "hora_inicio", "label": "Hora de inicio", "type": "text", "required": true, "placeholder": "09:00 AM"},
-    {"key": "hora_fin", "label": "Hora de fin", "type": "text", "required": true, "placeholder": "10:30 AM"},
-    {"key": "honorarios", "label": "Honorarios (valor)", "type": "text", "required": true, "placeholder": "2.000.000"},
-    {"key": "honorarios_letras", "label": "Honorarios en letras", "type": "text", "required": true, "placeholder": "Dos millones de pesos colombianos"},
+    {"key": "email_contratista", "label": "Correo electrónico del contratista", "type": "text", "required": true, "placeholder": "ponente@ejemplo.com"},
+    {"key": "telefono_contratista", "label": "Teléfono del contratista", "type": "text", "required": true, "placeholder": "+57 300 0000000"},
+    {"key": "honorarios", "label": "Honorarios (valor numérico)", "type": "text", "required": true, "placeholder": "2.000.000"},
+    {"key": "honorarios_letras", "label": "Honorarios en letras", "type": "text", "required": true, "placeholder": "Dos millones de pesos colombianos M/CTE"},
     {"key": "moneda", "label": "Moneda", "type": "select", "required": true, "options": ["COP", "USD", "EUR"]},
-    {"key": "forma_pago", "label": "Forma de pago", "type": "textarea", "required": true, "placeholder": "50% anticipado, 50% post-evento"},
-    {"key": "lugar_evento", "label": "Lugar del evento", "type": "text", "required": true, "placeholder": "Centro de Convenciones, Bogotá"},
+    {"key": "forma_pago", "label": "Forma de pago", "type": "textarea", "required": true, "placeholder": "50% al momento de la firma del contrato y 50% a la finalización del evento"},
     {"key": "anio", "label": "Año del evento", "type": "text", "required": true, "placeholder": "2026"}
   ]'::jsonb
 );
 
 -- ================================================
--- Template 2: Contrato de Stand/Expositor
+-- Template 2: Contrato de Stand (Concesión de Espacios Físicos)
 -- ================================================
 INSERT INTO contract_templates (name, slug, description, content, variables) VALUES (
-  'Contrato de Stand/Expositor',
+  'Contrato de Stand / Expositor',
   'stand-effix',
-  'Contrato de arrendamiento de espacio para expositores/stands en la Feria Effix',
-  '<div class="contract" style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.8; color: #333;">
-  <div style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-size: 24px; margin-bottom: 8px;">CONTRATO DE ARRENDAMIENTO DE ESPACIO</h1>
-    <h2 style="font-size: 18px; color: #666;">STAND EXPOSITOR - FERIA EFFIX {{anio}}</h2>
+  'Contrato de concesión de espacios físicos para expositores de la Feria Effix',
+  '<div style="font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 48px 56px; line-height: 1.9; color: #1a1a1a; font-size: 14px;">
+
+  <div style="text-align: center; margin-bottom: 48px; border-bottom: 2px solid #1a1a1a; padding-bottom: 32px;">
+    <h1 style="font-size: 20px; font-weight: bold; letter-spacing: 1px; margin: 0 0 8px 0; text-transform: uppercase;">CONTRATO DE CONCESIÓN DE ESPACIOS FÍSICOS</h1>
+    <h2 style="font-size: 16px; font-weight: normal; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">FERIA EFFIX {{anio}}</h2>
   </div>
 
-  <p>Entre los suscritos: <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento_tipo}} No. {{org_documento}}, representante legal de <strong>{{org_empresa}}</strong>, NIT {{org_nit}}, en adelante EL ORGANIZADOR; y
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">INFORMACIÓN GENERAL DEL CONCESIONARIO</h3>
 
-  {{#if empresa}}
-  <strong>{{empresa}}</strong>, identificada con {{id_fiscal}}, representada en este acto por <strong>{{representante_legal}}</strong>, identificado(a) con {{tipo_documento_representante}} No. {{numero_documento_representante}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
-  {{else}}
-  <strong>{{nombre_completo}}</strong>, identificado(a) con {{tipo_documento}} No. {{numero_documento}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
-  {{/if}}
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold; width: 35%;">Nombre / Razón social</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">
+        {{#if empresa}}{{empresa}}{{else}}{{nombre_completo}}{{/if}}
+      </td>
+    </tr>
+    {{#if sigla}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Sigla</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{sigla}}</td>
+    </tr>
+    {{/if}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">
+        {{#if empresa}}NIT / ID Fiscal{{else}}Tipo y N.º Documento{{/if}}
+      </td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">
+        {{#if empresa}}{{id_fiscal}}{{else}}{{tipo_documento}} No. {{numero_documento}}{{/if}}
+      </td>
+    </tr>
+    {{#if empresa}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Representante legal</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{representante_legal}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Documento representante</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{tipo_documento_representante}} No. {{numero_documento_representante}}</td>
+    </tr>
+    {{/if}}
+    {{#if pais}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">País</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{pais}}</td>
+    </tr>
+    {{/if}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Dirección</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{direccion}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Ciudad / Departamento</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{ciudad}} / {{departamento}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Teléfono / Celular</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{telefono}} / {{celular}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Correo electrónico</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{email}}</td>
+    </tr>
+    {{#if web_redes}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Web / Redes sociales</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{web_redes}}</td>
+    </tr>
+    {{/if}}
+    {{#if persona_encargada}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Persona encargada</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{persona_encargada}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Correo encargado(a)</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{email_encargada}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Celular encargado(a)</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{celular_encargada}}</td>
+    </tr>
+    {{/if}}
+  </table>
 
-  en adelante EL EXPOSITOR, acuerdan:</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">TÉRMINOS DE DURACIÓN</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold; width: 35%;">Montaje</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">14 y 15 de octubre de {{anio}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Evento</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">16, 17 y 18 de octubre de {{anio}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Desmontaje</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">19 de octubre de {{anio}}</td>
+    </tr>
+  </table>
 
-  <h3 style="margin-top: 30px;">CLÁUSULA PRIMERA - OBJETO</h3>
-  <p>EL ORGANIZADOR concede a EL EXPOSITOR el uso del espacio denominado <strong>Stand {{numero_stand}}</strong>, ubicado en {{ubicacion}}, con un área de <strong>{{metros_cuadrados}} metros cuadrados</strong>, durante la realización de la Feria Effix {{anio}} en {{lugar_evento}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">ÁREA ARRENDADA Y VALOR</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
+    <thead>
+      <tr style="background: #1a1a1a; color: #fff;">
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Pabellón</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">N.º Stand</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Tamaño</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor total (IVA incluido)</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor abono</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;">{{pabellon}}</td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;">{{numero_stand}}</td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;">{{tamano_stand}}</td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_total}} {{moneda}}</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_abono}} {{moneda}}</strong></td>
+      </tr>
+    </tbody>
+  </table>
 
-  <h3>CLÁUSULA SEGUNDA - VIGENCIA</h3>
-  <p>El presente contrato tendrá vigencia desde la fecha de montaje ({{fecha_montaje}}) hasta la fecha de desmontaje ({{fecha_desmontaje}}). El evento se realizará los días {{fechas_evento}}.</p>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico —el cual no constituye arrendamiento— se celebra entre <strong>EFFIX S.A.S.</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
 
-  <h3>CLÁUSULA TERCERA - VALOR Y FORMA DE PAGO</h3>
-  <p>El valor total del arrendamiento del espacio es de <strong>{{valor_stand}} {{moneda}}</strong> ({{valor_stand_letras}}). El pago se realizará de la siguiente manera: {{forma_pago}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CONSIDERACIONES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE ha suscrito contrato con Plaza Mayor Medellín Convenciones y Exposiciones S.A. para el uso de sus instalaciones durante el período del evento. En virtud de lo anterior, EL CONCESIONARIO conoce y acepta que las condiciones de uso del espacio físico están sujetas al reglamento interno de Plaza Mayor, cuyo Anexo 1 hace parte integral del presente contrato.</p>
 
-  <h3>CLÁUSULA CUARTA - OBLIGACIONES DEL EXPOSITOR</h3>
-  <ol>
-    <li>Realizar el montaje del stand en las fechas y horarios indicados por EL ORGANIZADOR.</li>
-    <li>Mantener el stand en óptimas condiciones durante todo el evento.</li>
-    <li>Cumplir con las normas de seguridad y convivencia del recinto.</li>
-    <li>Desmontar y desocupar el espacio en la fecha establecida ({{fecha_desmontaje}}).</li>
-    <li>No ceder ni subarrendar el espacio asignado sin autorización escrita.</li>
-    <li>Contar con todos los permisos y licencias requeridos para los productos/servicios exhibidos.</li>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">PRIMERA. OBJETO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE otorga a EL CONCESIONARIO el uso temporal del espacio físico identificado como Stand No. {{numero_stand}}, ubicado en el Pabellón {{pabellon}}, con un área de {{tamano_stand}}, en las instalaciones de Plaza Mayor Medellín, para los fines exclusivos de exhibición y comercialización de los productos y/o servicios del CONCESIONARIO durante la Feria Effix {{anio}}.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEGUNDA. OBLIGACIONES DEL CONCESIONARIO</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Usar el espacio concedido exclusivamente para los fines del objeto contractual.</li>
+    <li style="margin-bottom: 8px;">Realizar el montaje del stand dentro de los horarios establecidos por EL CONCEDENTE para los días 14 y 15 de octubre de {{anio}}.</li>
+    <li style="margin-bottom: 8px;">Mantener el stand en óptimas condiciones de presentación, aseo y funcionamiento durante todo el evento.</li>
+    <li style="margin-bottom: 8px;">Cumplir con el reglamento interno de Plaza Mayor Medellín (Anexo 1) y el Manual del Expositor (Anexo 2), los cuales forman parte integral del presente contrato.</li>
+    <li style="margin-bottom: 8px;">Desmontar y desocupar el espacio asignado a más tardar el 19 de octubre de {{anio}}, en los horarios que EL CONCEDENTE indique.</li>
+    <li style="margin-bottom: 8px;">Contar con todos los permisos, licencias, registros sanitarios y autorizaciones legales requeridas para la exhibición y/o venta de sus productos o servicios.</li>
+    <li style="margin-bottom: 8px;">No ceder, subarrendar ni transferir a ningún título el espacio asignado, sin autorización previa y escrita de EL CONCEDENTE.</li>
+    <li style="margin-bottom: 8px;">Responder por los daños que cause al espacio físico, a las instalaciones del recinto o a terceros, con ocasión del montaje, uso o desmontaje del stand.</li>
+    <li style="margin-bottom: 8px;">Cumplir con los horarios de atención al público establecidos por EL CONCEDENTE para los días del evento.</li>
+    <li style="margin-bottom: 8px;">Contar con el personal necesario para la adecuada atención del stand durante los días del evento.</li>
+    <li style="margin-bottom: 8px;">Disponer de manera adecuada los residuos generados en el stand, conforme a las normas ambientales y del recinto.</li>
+    <li style="margin-bottom: 8px;">No instalar estructuras, elementos o materiales que superen los límites del espacio asignado o que puedan obstaculizar los pasillos, la circulación o la visibilidad de otros expositores.</li>
   </ol>
 
-  <h3>CLÁUSULA QUINTA - OBLIGACIONES DEL ORGANIZADOR</h3>
-  <ol>
-    <li>Entregar el espacio en las condiciones acordadas.</li>
-    <li>Proveer servicios básicos: energía eléctrica (110V), iluminación general y señalización.</li>
-    <li>Garantizar seguridad general del recinto durante el horario del evento.</li>
-    <li>Realizar la promoción general del evento.</li>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">TERCERA. RESPONSABILIDAD POR BIENES DE TERCEROS</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE no asume responsabilidad alguna por pérdida, hurto, deterioro o daño de los bienes, equipos, mercancías o elementos de EL CONCESIONARIO o de terceros que se encuentren en el espacio asignado, durante el montaje, el desarrollo del evento o el desmontaje. EL CONCESIONARIO deberá adoptar las medidas de seguridad que estime necesarias para la protección de sus bienes.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CUARTA. OBLIGACIONES DEL CONCEDENTE</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCEDENTE se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Entregar el espacio asignado en las condiciones acordadas y en los plazos establecidos para el montaje.</li>
+    <li style="margin-bottom: 8px;">Garantizar el acceso a los servicios básicos del recinto, conforme al contrato suscrito con Plaza Mayor Medellín.</li>
+    <li style="margin-bottom: 8px;">Realizar la promoción y difusión general de la Feria Effix {{anio}} a través de los canales de comunicación del evento.</li>
+    <li style="margin-bottom: 8px;">Brindar a EL CONCESIONARIO la información necesaria para el correcto cumplimiento de sus obligaciones.</li>
   </ol>
 
-  <h3>CLÁUSULA SEXTA - SERVICIOS ADICIONALES</h3>
-  <p>{{servicios_adicionales}}</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">QUINTA. INDEMNIDAD</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO mantendrá indemne a EL CONCEDENTE frente a cualquier reclamación, demanda, sanción o daño que se derive del incumplimiento de sus obligaciones legales, del daño a terceros o del uso inadecuado del espacio concedido.</p>
 
-  <h3>CLÁUSULA SÉPTIMA - RESPONSABILIDAD</h3>
-  <p>EL EXPOSITOR será responsable de sus equipos, mercancía y personal. EL ORGANIZADOR no se hace responsable por pérdidas, daños o hurtos de los bienes del EXPOSITOR.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEXTA. FUERZA MAYOR</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Ninguna de las partes será responsable por el incumplimiento de sus obligaciones cuando dicho incumplimiento sea consecuencia de un evento de fuerza mayor o caso fortuito, debidamente acreditado, que haga imposible el cumplimiento de las obligaciones asumidas. La parte afectada deberá notificar a la otra de inmediato y por escrito.</p>
 
-  <h3>CLÁUSULA OCTAVA - CANCELACIÓN</h3>
-  <p>En caso de cancelación por EL EXPOSITOR: con más de 30 días, se reembolsa el 80%; entre 15-30 días, el 50%; menos de 15 días, no hay reembolso. Cancelación por EL ORGANIZADOR: reembolso total.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SÉPTIMA. DURACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato tendrá vigencia desde la fecha de su suscripción y hasta el 19 de octubre de {{anio}}, fecha en que deberá haberse efectuado el desmontaje total del stand.</p>
 
-  <h3>CLÁUSULA NOVENA - LEGISLACIÓN</h3>
-  <p>Este contrato se rige por las leyes de Colombia. Para cualquier controversia, las partes acuerdan someterse a la jurisdicción de los jueces de {{ciudad_jurisdiccion}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">OCTAVA. REMUNERACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> como contraprestación por la concesión del espacio físico descrito en el presente contrato. El valor de abono es de <strong>{{valor_abono}} {{moneda}}</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1 — Mora:</strong> El retardo en el pago de cualquiera de las cuotas pactadas causará intereses de mora a la tasa máxima legal permitida, sin perjuicio de la facultad de EL CONCEDENTE de dar por terminado el contrato.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 2 — Cancelaciones y devoluciones:</strong> En caso de cancelación por parte de EL CONCESIONARIO, se aplicarán las siguientes penalizaciones sobre el valor total del contrato:
+    <br>- Cancelación con 0 a 45 días antes del evento: retención del 45% del valor total.
+    <br>- Cancelación entre 46 y 60 días antes del evento: retención del 35% del valor total.
+    <br>- Cancelación con 61 a 90 días antes del evento: retención del 25% del valor total.
+    <br>Si la cancelación es por causa imputable a EL CONCEDENTE, se devolverá la totalidad de los valores pagados.
+  </p>
 
-  <p style="margin-top: 40px;">Firmado electrónicamente conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">NOVENA. PROMOCIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO autoriza a EL CONCEDENTE para utilizar su nombre, razón social, marca y/o logotipo en la promoción y difusión de la Feria Effix {{anio}}, en los medios de comunicación y canales digitales que EL CONCEDENTE estime pertinentes.</p>
 
-  <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA. HORARIO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO deberá respetar los horarios de acceso al recinto, montaje, atención al público y desmontaje que EL CONCEDENTE establezca y comunique oportunamente. El incumplimiento de los horarios podrá generar costos adicionales a cargo de EL CONCESIONARIO.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA PRIMERA. AUTONOMÍA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato no genera ningún vínculo laboral entre las partes ni entre EL CONCEDENTE y el personal que EL CONCESIONARIO emplee para la atención del stand. EL CONCESIONARIO actúa de manera autónoma e independiente en el ejercicio de su actividad comercial.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SEGUNDA. RESPONSABILIDAD CIVIL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO será responsable de los daños que cause a terceros, al recinto o a EL CONCEDENTE, con ocasión del montaje, uso, operación o desmontaje de su stand. Se recomienda contar con un seguro de responsabilidad civil para cubrir estos riesgos.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA TERCERA. INGRESO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO recibirá las escarapelas y/o acreditaciones de acceso al evento según el paquete adquirido. El acceso estará sujeto al reglamento general del evento y de Plaza Mayor Medellín.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA CUARTA. CESIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO no podrá ceder, transferir ni subarrendar los derechos derivados del presente contrato a terceros, sin la autorización previa y escrita de EL CONCEDENTE.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA QUINTA. PROHIBICIONES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Queda expresamente prohibido a EL CONCESIONARIO: (i) distribuir escarapelas, volantes, material publicitario o muestras fuera del área del stand asignado, sin autorización de EL CONCEDENTE; (ii) realizar actividades de volanteo en los pasillos, áreas comunes o exteriores del recinto; (iii) instalar elementos que obstaculicen la circulación o afecten la visibilidad de otros expositores; (iv) utilizar equipos de sonido a volúmenes que perturben a los demás participantes.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SEXTA. DERECHO DE RETRACTO — LEY 1480, ARTÍCULO 47</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">De conformidad con el artículo 47 de la Ley 1480 de 2011 (Estatuto del Consumidor), cuando el presente contrato sea celebrado mediante métodos no tradicionales o a distancia, EL CONCESIONARIO podrá ejercer el derecho de retracto dentro de los cinco (5) días hábiles siguientes a la celebración del contrato o a la entrega del bien, lo que ocurra después.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SÉPTIMA. TERMINACIÓN ANTICIPADA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE podrá dar por terminado el presente contrato de manera anticipada y unilateral, sin lugar a indemnización, en caso de incumplimiento grave de las obligaciones de EL CONCESIONARIO, previa comunicación escrita con un mínimo de cuarenta y ocho (48) horas de antelación.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA OCTAVA. DOMICILIO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Para todos los efectos legales y contractuales, las partes fijan como domicilio contractual la ciudad de Medellín, Colombia.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA. DOCUMENTOS INTEGRANTES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Forman parte integral del presente contrato: (i) <strong>Anexo 1:</strong> Reglamento interno de Plaza Mayor Medellín; (ii) <strong>Anexo 2:</strong> Manual del Expositor de la Feria Effix {{anio}}.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA PRIMERA. PROPIEDAD INTELECTUAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Los derechos de propiedad intelectual sobre los contenidos, marcas, logos y materiales de comunicación de la Feria Effix son de titularidad exclusiva de EL CONCEDENTE, protegidos por la Ley 23 de 1982 y demás normas concordantes. EL CONCESIONARIO no podrá usarlos por fuera del marco del presente contrato sin autorización escrita previa.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA SEGUNDA. AUTORIZACIÓN GRABACIÓN Y FOTOGRAFÍA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO autoriza a EL CONCEDENTE para tomar fotografías y/o grabar video en el stand durante el evento, y utilizar dicho material en los canales de comunicación oficiales de la Feria Effix, de forma gratuita y sin limitación de tiempo o territorio.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA TERCERA. LIQUIDACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Las partes realizarán la liquidación del contrato dentro de los quince (15) días calendario siguientes a la fecha de terminación del mismo, oportunidad en la que se verificará el cumplimiento de las obligaciones mutuas y se procederá a los ajustes económicos a que haya lugar.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA CUARTA. RESOLUCIÓN DE CONFLICTOS</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Las controversias que surjan en relación con la interpretación, ejecución o terminación del presente contrato serán resueltas, en primer lugar, mediante arreglo directo entre las partes durante un período de sesenta (60) días calendario. Si no se logra acuerdo, las partes podrán acudir a los mecanismos legales ordinarios.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA QUINTA. ACUERDO INTEGRAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato, junto con sus anexos, constituye el acuerdo integral entre las partes respecto a su objeto, y deja sin efecto cualquier negociación, representación o acuerdo previo, verbal o escrito, relacionado con el mismo.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA SEXTA. DERECHO DE RETENCIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">De conformidad con el artículo 2000 del Código Civil colombiano, EL CONCEDENTE podrá ejercer el derecho de retención sobre los bienes de EL CONCESIONARIO que se encuentren en el espacio asignado, en caso de que existan obligaciones dinerarias incumplidas a cargo de EL CONCESIONARIO al momento de la terminación del contrato.</p>
+
+  <p style="text-align: justify; margin-top: 40px; margin-bottom: 40px;">En constancia de lo anterior, las partes suscriben el presente contrato de forma electrónica, de conformidad con la Ley 527 de 1999, en la fecha indicada en el sistema de firma electrónica.</p>
+
+  <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL ORGANIZADOR</strong></p>
-      <p>{{org_nombre}}</p>
-      <p>{{org_documento_tipo}} {{org_documento}}</p>
-      <p>{{org_empresa}}</p>
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCEDENTE</p>
+        <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_documento}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_empresa}}</p>
+        <p style="margin: 0 0 4px 0;">NIT: {{org_nit}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_ciudad}}</p>
+      </div>
     </div>
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL EXPOSITOR</strong></p>
-      {{#if empresa}}
-      <p>{{representante_legal}}</p>
-      <p>{{tipo_documento_representante}} {{numero_documento_representante}}</p>
-      <p>{{empresa}} &mdash; {{id_fiscal}}</p>
-      {{else}}
-      <p>{{nombre_completo}}</p>
-      <p>{{tipo_documento}} {{numero_documento}}</p>
-      {{#if pais}}<p>Nacionalidad: {{pais}}</p>{{/if}}
-      {{/if}}
-      <div id="signature-placeholder" style="min-height: 80px; border: 1px dashed #ccc; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
-        [Firma electrónica]
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCESIONARIO</p>
+        {{#if empresa}}
+        <p style="margin: 0 0 4px 0;">{{representante_legal}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento_representante}} No. {{numero_documento_representante}}</p>
+        <p style="margin: 0 0 4px 0;">{{empresa}}</p>
+        <p style="margin: 0 0 4px 0;">{{id_fiscal}}</p>
+        {{else}}
+        <p style="margin: 0 0 4px 0;">{{nombre_completo}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
+        {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
+        {{/if}}
+        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
+          [Firma electrónica]
+        </div>
       </div>
     </div>
   </div>
+
 </div>',
   '[
     {"key": "tipo_persona", "label": "Tipo de persona", "type": "select", "required": true, "options": ["Persona Natural", "Persona Jurídica"]},
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
+    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
-    {"key": "representante_legal", "label": "Nombre del representante legal (persona jurídica)", "type": "text", "required": false},
+    {"key": "sigla", "label": "Sigla (opcional)", "type": "text", "required": false, "placeholder": "EMP"},
+    {"key": "representante_legal", "label": "Nombre del representante legal", "type": "text", "required": false},
     {"key": "tipo_documento_representante", "label": "Tipo documento del representante", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento_representante", "label": "Número documento del representante", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
+    {"key": "direccion", "label": "Dirección", "type": "text", "required": true, "placeholder": "Calle 10 # 20-30"},
+    {"key": "ciudad", "label": "Ciudad", "type": "text", "required": true, "placeholder": "Medellín"},
+    {"key": "departamento", "label": "Departamento", "type": "text", "required": true, "placeholder": "Antioquia"},
+    {"key": "telefono", "label": "Teléfono fijo", "type": "text", "required": false, "placeholder": "604 0000000"},
+    {"key": "celular", "label": "Celular", "type": "text", "required": true, "placeholder": "+57 300 0000000"},
+    {"key": "email", "label": "Correo electrónico", "type": "text", "required": true, "placeholder": "contacto@empresa.com"},
+    {"key": "web_redes", "label": "Web / Redes sociales (opcional)", "type": "text", "required": false, "placeholder": "www.empresa.com / @empresa"},
+    {"key": "persona_encargada", "label": "Persona encargada del stand (opcional)", "type": "text", "required": false},
+    {"key": "email_encargada", "label": "Correo de la persona encargada", "type": "text", "required": false},
+    {"key": "celular_encargada", "label": "Celular de la persona encargada", "type": "text", "required": false},
+    {"key": "pabellon", "label": "Pabellón", "type": "text", "required": true, "placeholder": "Pabellón A"},
     {"key": "numero_stand", "label": "Número de stand", "type": "text", "required": true, "placeholder": "A-15"},
-    {"key": "metros_cuadrados", "label": "Metros cuadrados", "type": "number", "required": true, "placeholder": "9"},
-    {"key": "ubicacion", "label": "Ubicación del stand", "type": "text", "required": true, "placeholder": "Pabellón A, Pasillo 3"},
-    {"key": "valor_stand", "label": "Valor del stand (monto)", "type": "text", "required": true},
-    {"key": "valor_stand_letras", "label": "Valor en letras", "type": "text", "required": true},
+    {"key": "tamano_stand", "label": "Tamaño del stand", "type": "text", "required": true, "placeholder": "9 m²"},
+    {"key": "valor_total", "label": "Valor total (IVA incluido)", "type": "text", "required": true, "placeholder": "5.000.000"},
+    {"key": "valor_abono", "label": "Valor del abono", "type": "text", "required": true, "placeholder": "2.500.000"},
     {"key": "moneda", "label": "Moneda", "type": "select", "required": true, "options": ["COP", "USD", "EUR"]},
-    {"key": "forma_pago", "label": "Forma de pago", "type": "textarea", "required": true},
-    {"key": "fecha_montaje", "label": "Fecha de montaje", "type": "date", "required": true},
-    {"key": "fecha_desmontaje", "label": "Fecha de desmontaje", "type": "date", "required": true},
-    {"key": "fechas_evento", "label": "Fechas del evento", "type": "text", "required": true},
-    {"key": "lugar_evento", "label": "Lugar del evento", "type": "text", "required": true},
-    {"key": "servicios_adicionales", "label": "Servicios adicionales incluidos", "type": "textarea", "required": false, "placeholder": "WiFi dedicado, conexión eléctrica 220V, mobiliario básico"},
-    {"key": "ciudad_jurisdiccion", "label": "Ciudad de jurisdicción", "type": "text", "required": true, "placeholder": "Bogotá D.C."},
     {"key": "anio", "label": "Año del evento", "type": "text", "required": true, "placeholder": "2026"}
   ]'::jsonb
 );
 
 -- ================================================
--- Template 3: Contrato de Patrocinador
+-- Template 3: Contrato de Patrocinios
 -- ================================================
 INSERT INTO contract_templates (name, slug, description, content, variables) VALUES (
-  'Contrato de Patrocinador',
-  'patrocinador-effix',
-  'Contrato de patrocinio para la Feria Effix',
-  '<div class="contract" style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.8; color: #333;">
-  <div style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-size: 24px; margin-bottom: 8px;">CONTRATO DE PATROCINIO</h1>
-    <h2 style="font-size: 18px; color: #666;">FERIA EFFIX {{anio}}</h2>
+  'Contrato de Patrocinio',
+  'patrocinio-effix',
+  'Contrato de concesión de espacios y alianza estratégica para patrocinadores de la Feria Effix',
+  '<div style="font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 48px 56px; line-height: 1.9; color: #1a1a1a; font-size: 14px;">
+
+  <div style="text-align: center; margin-bottom: 48px; border-bottom: 2px solid #1a1a1a; padding-bottom: 32px;">
+    <h1 style="font-size: 20px; font-weight: bold; letter-spacing: 1px; margin: 0 0 8px 0; text-transform: uppercase;">CONTRATO DE PATROCINIO Y ALIANZA ESTRATÉGICA</h1>
+    <h2 style="font-size: 16px; font-weight: normal; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">FERIA EFFIX {{anio}}</h2>
   </div>
 
-  <p>Entre: <strong>{{org_nombre}}</strong>, {{org_documento_tipo}} No. {{org_documento}}, representante legal de <strong>{{org_empresa}}</strong>, NIT {{org_nit}} (EL ORGANIZADOR); y
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">INFORMACIÓN GENERAL DEL CONCESIONARIO / PATROCINADOR</h3>
 
-  {{#if empresa}}
-  <strong>{{empresa}}</strong>, identificada con {{id_fiscal}}, representada en este acto por <strong>{{representante_legal}}</strong>, identificado(a) con {{tipo_documento_representante}} No. {{numero_documento_representante}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
-  {{else}}
-  <strong>{{nombre_completo}}</strong>, identificado(a) con {{tipo_documento}} No. {{numero_documento}}{{#if pais}}, de nacionalidad {{pais}}{{/if}},
-  {{/if}}
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold; width: 35%;">Nombre / Razón social</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">
+        {{#if empresa}}{{empresa}}{{else}}{{nombre_completo}}{{/if}}
+      </td>
+    </tr>
+    {{#if sigla}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Sigla</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{sigla}}</td>
+    </tr>
+    {{/if}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">
+        {{#if empresa}}NIT / ID Fiscal{{else}}Tipo y N.º Documento{{/if}}
+      </td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">
+        {{#if empresa}}{{id_fiscal}}{{else}}{{tipo_documento}} No. {{numero_documento}}{{/if}}
+      </td>
+    </tr>
+    {{#if empresa}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Representante legal</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{representante_legal}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Documento representante</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{tipo_documento_representante}} No. {{numero_documento_representante}}</td>
+    </tr>
+    {{/if}}
+    {{#if pais}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">País</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{pais}}</td>
+    </tr>
+    {{/if}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Tipo de patrocinio</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{tipo_patrocinio}}</strong></td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Dirección</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{direccion}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Ciudad / Departamento</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{ciudad}} / {{departamento}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Teléfono / Celular</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{telefono}} / {{celular}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Correo electrónico</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{email}}</td>
+    </tr>
+    {{#if web_redes}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Web / Redes sociales</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{web_redes}}</td>
+    </tr>
+    {{/if}}
+    {{#if persona_encargada}}
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Persona encargada</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{persona_encargada}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Correo encargado(a)</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{email_encargada}}</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #ccc; padding: 8px 12px; background: #f5f5f5; font-weight: bold;">Celular encargado(a)</td>
+      <td style="border: 1px solid #ccc; padding: 8px 12px;">{{celular_encargada}}</td>
+    </tr>
+    {{/if}}
+  </table>
 
-  (EL PATROCINADOR), se celebra el presente contrato de patrocinio:</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">VALOR DEL PATROCINIO</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
+    <thead>
+      <tr style="background: #1a1a1a; color: #fff;">
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Tipo de patrocinio</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor total (IVA incluido)</th>
+        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor abono</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;">{{tipo_patrocinio}}</td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_total}} {{moneda}}</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_abono}} {{moneda}}</strong></td>
+      </tr>
+    </tbody>
+  </table>
 
-  <h3 style="margin-top: 30px;">CLÁUSULA PRIMERA - OBJETO</h3>
-  <p>EL PATROCINADOR se vincula a la Feria Effix {{anio}} en calidad de <strong>Patrocinador {{tipo_patrocinio}}</strong>, aportando los recursos económicos o en especie acordados, a cambio de los beneficios de visibilidad y posicionamiento descritos en este contrato.</p>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico y alianza estratégica —el cual no constituye arrendamiento— se celebra entre <strong>EFFIX S.A.S.</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
 
-  <h3>CLÁUSULA SEGUNDA - VALOR DEL PATROCINIO</h3>
-  <p>El valor total del patrocinio es de <strong>{{valor_patrocinio}} {{moneda}}</strong> ({{valor_patrocinio_letras}}). Forma de pago: {{forma_pago}}.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CONSIDERACIONES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE ha suscrito contrato con Plaza Mayor Medellín Convenciones y Exposiciones S.A. para el uso de sus instalaciones durante el período del evento. EL CONCESIONARIO conoce y acepta que las condiciones de uso del espacio físico están sujetas al reglamento interno de Plaza Mayor, cuyo Anexo 1 hace parte integral del presente contrato.</p>
 
-  <h3>CLÁUSULA TERCERA - BENEFICIOS PARA EL PATROCINADOR</h3>
-  <p>EL ORGANIZADOR otorgará los siguientes beneficios:</p>
-  <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 15px 0;">
-    {{beneficios}}
-  </div>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">PRIMERA. OBJETO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE otorga a EL CONCESIONARIO el uso temporal del espacio físico y/o alianza estratégica correspondiente al paquete de patrocinio <strong>{{tipo_patrocinio}}</strong> en las instalaciones de Plaza Mayor Medellín, para los fines exclusivos de visibilidad de marca, exhibición y/o comercialización de los productos y/o servicios del CONCESIONARIO durante la Feria Effix {{anio}}.</p>
 
-  <h3>CLÁUSULA CUARTA - OBLIGACIONES DEL ORGANIZADOR</h3>
-  <ol>
-    <li>Incluir la marca del PATROCINADOR en toda la pauta publicitaria del evento según el nivel de patrocinio.</li>
-    <li>Entregar reporte post-evento con métricas de alcance y exposición de marca.</li>
-    <li>Cumplir con todos los beneficios acordados en la Cláusula Tercera.</li>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEGUNDA. OBLIGACIONES DEL CONCESIONARIO</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Usar el espacio y/o los beneficios concedidos exclusivamente para los fines del objeto contractual.</li>
+    <li style="margin-bottom: 8px;">Cumplir con el reglamento interno de Plaza Mayor Medellín (Anexo 1) y el Manual del Expositor (Anexo 2), los cuales forman parte integral del presente contrato.</li>
+    <li style="margin-bottom: 8px;">Entregar a EL CONCEDENTE los materiales de marca (logotipos, piezas gráficas, contenidos) con la anticipación que se indique, para su correcta integración en los soportes de comunicación del evento.</li>
+    <li style="margin-bottom: 8px;">Contar con todos los permisos, licencias y autorizaciones legales requeridas para la exhibición y/o venta de sus productos o servicios.</li>
+    <li style="margin-bottom: 8px;">No ceder, subarrendar ni transferir a ningún título los derechos derivados del presente contrato, sin autorización previa y escrita de EL CONCEDENTE.</li>
+    <li style="margin-bottom: 8px;">Responder por los daños que cause al espacio físico, a las instalaciones del recinto o a terceros.</li>
+    <li style="margin-bottom: 8px;">Cumplir con los horarios establecidos por EL CONCEDENTE.</li>
+    <li style="margin-bottom: 8px;">Disponer adecuadamente los residuos generados, conforme a las normas ambientales y del recinto.</li>
+    <li style="margin-bottom: 8px;">No instalar estructuras o elementos que superen los límites del espacio asignado o que obstaculicen la circulación.</li>
   </ol>
 
-  <h3>CLÁUSULA QUINTA - OBLIGACIONES DEL PATROCINADOR</h3>
-  <ol>
-    <li>Realizar los pagos en los plazos establecidos.</li>
-    <li>Entregar materiales de marca (logos, banners) con mínimo 15 días de anticipación.</li>
-    <li>No realizar actividades que perjudiquen la imagen del evento.</li>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">TERCERA. RESPONSABILIDAD POR BIENES DE TERCEROS</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE no asume responsabilidad alguna por pérdida, hurto, deterioro o daño de los bienes, equipos, mercancías o elementos de EL CONCESIONARIO o de terceros que se encuentren en el espacio asignado. EL CONCESIONARIO deberá adoptar las medidas de seguridad que estime necesarias para la protección de sus bienes.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CUARTA. OBLIGACIONES DEL CONCEDENTE</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCEDENTE se obliga a:</p>
+  <ol style="text-align: justify; padding-left: 24px; margin-bottom: 12px;">
+    <li style="margin-bottom: 8px;">Garantizar la visibilidad de marca del CONCESIONARIO conforme al paquete de patrocinio contratado.</li>
+    <li style="margin-bottom: 8px;">Entregar el espacio físico asignado, si aplica, en las condiciones acordadas y en los plazos establecidos.</li>
+    <li style="margin-bottom: 8px;">Realizar la promoción y difusión general de la Feria Effix {{anio}} e incluir la marca del CONCESIONARIO según el nivel de patrocinio.</li>
+    <li style="margin-bottom: 8px;">Brindar a EL CONCESIONARIO la información necesaria para el correcto cumplimiento de sus obligaciones.</li>
   </ol>
 
-  <h3>CLÁUSULA SEXTA - EXCLUSIVIDAD</h3>
-  <p>{{clausula_exclusividad}}</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">QUINTA. INDEMNIDAD</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO mantendrá indemne a EL CONCEDENTE frente a cualquier reclamación, demanda, sanción o daño que se derive del incumplimiento de sus obligaciones legales, del daño a terceros o del uso inadecuado del espacio concedido o de los beneficios de la alianza estratégica.</p>
 
-  <h3>CLÁUSULA SÉPTIMA - CANCELACIÓN</h3>
-  <p>En caso de cancelación por EL PATROCINADOR: con más de 45 días, reembolso del 70%; entre 15-45 días, reembolso del 30%; menos de 15 días, sin reembolso. Si el evento es cancelado por fuerza mayor, se reembolsará el 100%.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SEXTA. FUERZA MAYOR</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Ninguna de las partes será responsable por el incumplimiento de sus obligaciones cuando dicho incumplimiento sea consecuencia de un evento de fuerza mayor o caso fortuito debidamente acreditado. La parte afectada deberá notificar a la otra de inmediato y por escrito.</p>
 
-  <h3>CLÁUSULA OCTAVA - LEGISLACIÓN</h3>
-  <p>Este contrato se rige por las leyes de la República de Colombia.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">SÉPTIMA. DURACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato tendrá vigencia desde la fecha de su suscripción y hasta la culminación de la Feria Effix {{anio}}, incluyendo el desmontaje de los elementos del patrocinio, si aplica.</p>
 
-  <p style="margin-top: 40px;">Firmado electrónicamente conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012.</p>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">OCTAVA. REMUNERACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> como contraprestación por el patrocinio, alianza estratégica y/o espacio físico descritos en el presente contrato. El valor de abono es de <strong>{{valor_abono}} {{moneda}}</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1 — Mora:</strong> El retardo en el pago de cualquiera de las cuotas pactadas causará intereses de mora a la tasa máxima legal permitida, sin perjuicio de la facultad de EL CONCEDENTE de dar por terminado el contrato.</p>
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 2 — Cancelaciones y devoluciones:</strong> En caso de cancelación del stand, patrocinio y/o alianza estratégica por parte de EL CONCESIONARIO, se aplicarán las siguientes penalizaciones sobre el valor total del contrato:
+    <br>- Cancelación con 0 a 45 días antes del evento: retención del 45% del valor total.
+    <br>- Cancelación entre 46 y 60 días antes del evento: retención del 35% del valor total.
+    <br>- Cancelación con 61 a 90 días antes del evento: retención del 25% del valor total.
+    <br>Si la cancelación es por causa de fuerza mayor imputable a EL CONCEDENTE, este devolverá la totalidad del dinero recibido de EL CONCESIONARIO.
+    <br>En caso de incumplimiento de las obligaciones por parte de EL CONCESIONARIO, se aplicará una penalización del 20% sobre el valor total del contrato, sin perjuicio de las demás acciones legales.
+  </p>
 
-  <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">NOVENA. PROMOCIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO autoriza a EL CONCEDENTE para utilizar su nombre, razón social, marca y/o logotipo en la promoción y difusión de la Feria Effix {{anio}}, en los medios de comunicación y canales digitales que EL CONCEDENTE estime pertinentes.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA. HORARIO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO deberá respetar los horarios de acceso al recinto, montaje, atención al público y desmontaje que EL CONCEDENTE establezca y comunique oportunamente.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA PRIMERA. AUTONOMÍA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato no genera ningún vínculo laboral entre las partes ni entre EL CONCEDENTE y el personal que EL CONCESIONARIO emplee. EL CONCESIONARIO actúa de manera autónoma e independiente en el ejercicio de su actividad comercial.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SEGUNDA. RESPONSABILIDAD CIVIL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO será responsable de los daños que cause a terceros, al recinto o a EL CONCEDENTE, con ocasión del montaje, uso, operación o desmontaje de los elementos del patrocinio.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA TERCERA. INGRESO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO recibirá las escarapelas y/o acreditaciones de acceso al evento según el paquete de patrocinio adquirido. El acceso estará sujeto al reglamento general del evento y de Plaza Mayor Medellín.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA CUARTA. CESIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO no podrá ceder, transferir ni subarrendar los derechos derivados del presente contrato a terceros, sin la autorización previa y escrita de EL CONCEDENTE.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA QUINTA. PROHIBICIONES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Queda expresamente prohibido a EL CONCESIONARIO: (i) distribuir escarapelas, volantes, material publicitario o muestras fuera del área asignada, sin autorización de EL CONCEDENTE; (ii) realizar actividades de volanteo en los pasillos, áreas comunes o exteriores del recinto; (iii) instalar elementos que obstaculicen la circulación o afecten la visibilidad de otros expositores; (iv) utilizar equipos de sonido a volúmenes que perturben a los demás participantes.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SEXTA. DERECHO DE RETRACTO — LEY 1480, ARTÍCULO 47</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">De conformidad con el artículo 47 de la Ley 1480 de 2011 (Estatuto del Consumidor), cuando el presente contrato sea celebrado mediante métodos no tradicionales o a distancia, EL CONCESIONARIO podrá ejercer el derecho de retracto dentro de los cinco (5) días hábiles siguientes a la celebración del contrato o a la entrega del bien, lo que ocurra después.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA SÉPTIMA. TERMINACIÓN ANTICIPADA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE podrá dar por terminado el presente contrato de manera anticipada y unilateral, sin lugar a indemnización, en caso de incumplimiento grave de las obligaciones de EL CONCESIONARIO, previa comunicación escrita con un mínimo de cuarenta y ocho (48) horas de antelación.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">DÉCIMA OCTAVA. DOMICILIO</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Para todos los efectos legales y contractuales, las partes fijan como domicilio contractual la ciudad de Medellín, Colombia.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA. DOCUMENTOS INTEGRANTES</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Forman parte integral del presente contrato: (i) <strong>Anexo 1:</strong> Reglamento interno de Plaza Mayor Medellín; (ii) <strong>Anexo 2:</strong> Manual del Expositor de la Feria Effix {{anio}}.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA PRIMERA. PROPIEDAD INTELECTUAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Los derechos de propiedad intelectual sobre los contenidos, marcas, logos y materiales de comunicación de la Feria Effix son de titularidad exclusiva de EL CONCEDENTE, protegidos por la Ley 23 de 1982 y demás normas concordantes. EL CONCESIONARIO no podrá usarlos por fuera del marco del presente contrato sin autorización escrita previa.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA SEGUNDA. AUTORIZACIÓN GRABACIÓN Y FOTOGRAFÍA</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">EL CONCESIONARIO autoriza a EL CONCEDENTE para tomar fotografías y/o grabar video de las activaciones de patrocinio durante el evento, y utilizar dicho material en los canales de comunicación oficiales de la Feria Effix, de forma gratuita y sin limitación de tiempo o territorio.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA TERCERA. LIQUIDACIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Las partes realizarán la liquidación del contrato dentro de los quince (15) días calendario siguientes a la fecha de terminación del mismo, oportunidad en la que se verificará el cumplimiento de las obligaciones mutuas y se procederá a los ajustes económicos a que haya lugar.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA CUARTA. RESOLUCIÓN DE CONFLICTOS</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">Las controversias que surjan en relación con la interpretación, ejecución o terminación del presente contrato serán resueltas, en primer lugar, mediante arreglo directo entre las partes durante un período de sesenta (60) días calendario. Si no se logra acuerdo, las partes podrán acudir a los mecanismos legales ordinarios.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA QUINTA. ACUERDO INTEGRAL</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato, junto con sus anexos, constituye el acuerdo integral entre las partes respecto a su objeto, y deja sin efecto cualquier negociación, representación o acuerdo previo, verbal o escrito, relacionado con el mismo.</p>
+
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">VIGÉSIMA SEXTA. DERECHO DE RETENCIÓN</h3>
+  <p style="text-align: justify; margin-bottom: 24px;">De conformidad con el artículo 2000 del Código Civil colombiano, EL CONCEDENTE podrá ejercer el derecho de retención sobre los bienes de EL CONCESIONARIO que se encuentren en el espacio asignado, en caso de que existan obligaciones dinerarias incumplidas a cargo de EL CONCESIONARIO al momento de la terminación del contrato.</p>
+
+  <p style="text-align: justify; margin-top: 40px; margin-bottom: 40px;">En constancia de lo anterior, las partes suscriben el presente contrato de forma electrónica, de conformidad con la Ley 527 de 1999, en la fecha indicada en el sistema de firma electrónica.</p>
+
+  <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL ORGANIZADOR</strong></p>
-      <p>{{org_nombre}}</p>
-      <p>{{org_documento_tipo}} {{org_documento}}</p>
-      <p>{{org_empresa}}</p>
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCEDENTE</p>
+        <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_documento}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_empresa}}</p>
+        <p style="margin: 0 0 4px 0;">NIT: {{org_nit}}</p>
+        <p style="margin: 0 0 4px 0;">{{org_ciudad}}</p>
+      </div>
     </div>
     <div style="width: 45%;">
-      <p style="border-top: 1px solid #333; padding-top: 8px;"><strong>EL PATROCINADOR</strong></p>
-      {{#if empresa}}
-      <p>{{representante_legal}}</p>
-      <p>{{tipo_documento_representante}} {{numero_documento_representante}}</p>
-      <p>{{empresa}} &mdash; {{id_fiscal}}</p>
-      {{else}}
-      <p>{{nombre_completo}}</p>
-      <p>{{tipo_documento}} {{numero_documento}}</p>
-      {{#if pais}}<p>Nacionalidad: {{pais}}</p>{{/if}}
-      {{/if}}
-      <div id="signature-placeholder" style="min-height: 80px; border: 1px dashed #ccc; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
-        [Firma electrónica]
+      <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
+        <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCESIONARIO / PATROCINADOR</p>
+        {{#if empresa}}
+        <p style="margin: 0 0 4px 0;">{{representante_legal}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento_representante}} No. {{numero_documento_representante}}</p>
+        <p style="margin: 0 0 4px 0;">{{empresa}}</p>
+        <p style="margin: 0 0 4px 0;">{{id_fiscal}}</p>
+        {{else}}
+        <p style="margin: 0 0 4px 0;">{{nombre_completo}}</p>
+        <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
+        {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
+        {{/if}}
+        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
+          [Firma electrónica]
+        </div>
       </div>
     </div>
   </div>
+
 </div>',
   '[
     {"key": "tipo_persona", "label": "Tipo de persona", "type": "select", "required": true, "options": ["Persona Natural", "Persona Jurídica"]},
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
+    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
-    {"key": "representante_legal", "label": "Nombre del representante legal (persona jurídica)", "type": "text", "required": false},
+    {"key": "sigla", "label": "Sigla (opcional)", "type": "text", "required": false, "placeholder": "EMP"},
+    {"key": "representante_legal", "label": "Nombre del representante legal", "type": "text", "required": false},
     {"key": "tipo_documento_representante", "label": "Tipo documento del representante", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento_representante", "label": "Número documento del representante", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
-    {"key": "tipo_patrocinio", "label": "Tipo de patrocinio", "type": "select", "required": true, "options": ["Diamante", "Oro", "Plata", "Bronce"]},
-    {"key": "valor_patrocinio", "label": "Valor del patrocinio (monto)", "type": "text", "required": true},
-    {"key": "valor_patrocinio_letras", "label": "Valor en letras", "type": "text", "required": true},
+    {"key": "direccion", "label": "Dirección", "type": "text", "required": true, "placeholder": "Calle 10 # 20-30"},
+    {"key": "ciudad", "label": "Ciudad", "type": "text", "required": true, "placeholder": "Medellín"},
+    {"key": "departamento", "label": "Departamento", "type": "text", "required": true, "placeholder": "Antioquia"},
+    {"key": "telefono", "label": "Teléfono fijo", "type": "text", "required": false, "placeholder": "604 0000000"},
+    {"key": "celular", "label": "Celular", "type": "text", "required": true, "placeholder": "+57 300 0000000"},
+    {"key": "email", "label": "Correo electrónico", "type": "text", "required": true, "placeholder": "contacto@empresa.com"},
+    {"key": "web_redes", "label": "Web / Redes sociales (opcional)", "type": "text", "required": false, "placeholder": "www.empresa.com / @empresa"},
+    {"key": "persona_encargada", "label": "Persona encargada (opcional)", "type": "text", "required": false},
+    {"key": "email_encargada", "label": "Correo de la persona encargada", "type": "text", "required": false},
+    {"key": "celular_encargada", "label": "Celular de la persona encargada", "type": "text", "required": false},
+    {"key": "tipo_patrocinio", "label": "Tipo de patrocinio", "type": "select", "required": true, "options": ["Patrocinio Black", "Patrocinio Diamante", "Patrocinio Platino", "Patrocinio Oro", "Patrocinio Plata", "Patrocinio Bronce"]},
+    {"key": "valor_total", "label": "Valor total (IVA incluido)", "type": "text", "required": true, "placeholder": "20.000.000"},
+    {"key": "valor_abono", "label": "Valor del abono", "type": "text", "required": true, "placeholder": "10.000.000"},
     {"key": "moneda", "label": "Moneda", "type": "select", "required": true, "options": ["COP", "USD", "EUR"]},
-    {"key": "forma_pago", "label": "Forma de pago", "type": "textarea", "required": true},
-    {"key": "beneficios", "label": "Beneficios del patrocinio", "type": "textarea", "required": true, "placeholder": "- Logo en banner principal\n- 2 stands de 9m2\n- 5 entradas VIP\n- Mención en redes sociales"},
-    {"key": "clausula_exclusividad", "label": "Cláusula de exclusividad", "type": "textarea", "required": false, "placeholder": "El PATROCINADOR tendrá exclusividad en la categoría de..."},
     {"key": "anio", "label": "Año del evento", "type": "text", "required": true, "placeholder": "2026"}
   ]'::jsonb
 );

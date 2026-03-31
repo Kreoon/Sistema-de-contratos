@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
+import { PaymentSchedule } from '@/components/contracts/PaymentSchedule'
 import type { Contract, AuditEntry, Signature, ContractStatus } from '@/lib/types'
 
 export function ContractDetail() {
@@ -183,6 +184,12 @@ export function ContractDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Payment Schedule */}
+          <PaymentSchedule
+            contractId={contract.id}
+            moneda={(contract.contract_data?.moneda as string) || 'COP'}
+          />
 
           {/* Firma capturada */}
           {signature && (
