@@ -199,12 +199,14 @@ export function ContractNew() {
   }
   const renderedHtml = selectedTemplate ? renderTemplate(selectedTemplate.content, templateData as Record<string, string>) : ''
 
-  // Campos que se gestionan en la sección de pagos, no en "Datos del Contrato"
+  // Campos que se gestionan en secciones especiales, no en "Datos del Contrato"
   const paymentKeys = ['valor_total', 'valor_abono', 'moneda', 'forma_pago', 'honorarios', 'honorarios_letras', 'valor_stand', 'valor_stand_letras', 'valor_patrocinio', 'valor_patrocinio_letras']
+  const standKeys = ['tamano_stand']
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
-    // Ocultar campos de pago (se gestionan aparte)
+    // Ocultar campos gestionados en secciones especiales
     if (paymentKeys.includes(v.key)) return false
+    if (standKeys.includes(v.key)) return false
     const persona = formData.tipo_persona
     const naturalOnly = ['nombre_completo', 'tipo_documento', 'numero_documento']
     const juridicaOnly = ['empresa', 'id_fiscal', 'sigla', 'representante_legal', 'tipo_documento_representante', 'numero_documento_representante']
@@ -509,6 +511,57 @@ export function ContractNew() {
                       Si el contacto no existe, se creará automáticamente al guardar el contrato.
                     </p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tipo de Stand (solo para templates de stand) */}
+          {selectedTemplate && selectedTemplate.variables.some(v => v.key === 'tamano_stand') && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Tipo de Stand</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: '2×2', medidas: '2x2', m2: 4, tipo: 'Estándar' },
+                    { label: '2×3', medidas: '2x3', m2: 6, tipo: 'Estándar' },
+                    { label: '4×2', medidas: '4x2', m2: 8, tipo: 'Estándar' },
+                    { label: '4×3', medidas: '4x3', m2: 12, tipo: 'Estándar' },
+                    { label: '5×3', medidas: '5x3', m2: 15, tipo: 'Estándar' },
+                    { label: '6×3', medidas: '6x3', m2: 18, tipo: 'Estándar' },
+                    { label: '5×3 Isla', medidas: '5x3', m2: 15, tipo: 'Tipo Isla' },
+                    { label: '6×3 Isla', medidas: '6x3', m2: 18, tipo: 'Tipo Isla' },
+                    { label: '6×4', medidas: '6x4', m2: 24, tipo: 'Estándar' },
+                  ].map(stand => {
+                    const isSelected = formData.tamano_stand === `${stand.m2} m² (${stand.medidas} - ${stand.tipo})`
+                    return (
+                      <button
+                        key={stand.label}
+                        type="button"
+                        onClick={() => {
+                          handleFieldChange('tamano_stand', `${stand.m2} m² (${stand.medidas} - ${stand.tipo})`)
+                        }}
+                        className={`p-3 border rounded-lg text-center transition-colors ${
+                          isSelected
+                            ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]'
+                            : 'hover:bg-[hsl(var(--secondary))]'
+                        }`}
+                      >
+                        <p className="font-bold text-lg">{stand.label}</p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))]">{stand.m2} m²</p>
+                        {stand.tipo !== 'Estándar' && (
+                          <p className="text-xs font-medium mt-1">{stand.tipo}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                {formData.tamano_stand && (
+                  <p className="text-sm bg-[hsl(var(--secondary))] p-2 rounded">
+                    Seleccionado: <strong>{formData.tamano_stand}</strong>
+                  </p>
                 )}
               </CardContent>
             </Card>
