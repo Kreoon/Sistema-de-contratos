@@ -25,12 +25,29 @@ export function ContactNew() {
     setForm(prev => ({ ...prev, [key]: value }))
 
   const handleSave = async () => {
-    if (tipoPersona === 'natural' && !form.nombre_completo) {
-      toast.error('Nombre completo es requerido')
-      return
+    // Validar campos obligatorios según tipo de persona
+    const missing: string[] = []
+
+    if (tipoPersona === 'natural') {
+      if (!form.nombre_completo) missing.push('Nombre completo')
+      if (!form.tipo_documento) missing.push('Tipo documento')
+      if (!form.numero_documento) missing.push('Número documento')
+    } else {
+      if (!form.empresa) missing.push('Empresa')
+      if (!form.id_fiscal) missing.push('NIT / Tax ID')
+      if (!form.representante_legal) missing.push('Representante legal')
     }
-    if (tipoPersona === 'juridica' && !form.empresa) {
-      toast.error('Nombre de empresa es requerido')
+
+    // Obligatorios para todos
+    if (!form.email) missing.push('Email')
+    if (!form.celular) missing.push('Celular')
+    if (!form.pais) missing.push('País')
+    if (!form.departamento) missing.push('Departamento/Estado')
+    if (!form.ciudad || form.ciudad === '__otro') missing.push('Ciudad')
+    if (!form.direccion) missing.push('Dirección')
+
+    if (missing.length > 0) {
+      toast.error('Campos obligatorios faltantes', { description: missing.join(', ') })
       return
     }
 
@@ -125,7 +142,7 @@ export function ContactNew() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tipo_documento">Tipo documento</Label>
+                  <Label htmlFor="tipo_documento">Tipo documento *</Label>
                   <Select
                     id="tipo_documento"
                     value={form.tipo_documento || ''}
@@ -140,7 +157,7 @@ export function ContactNew() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="numero_documento">Numero documento</Label>
+                  <Label htmlFor="numero_documento">Número documento *</Label>
                   <Input
                     id="numero_documento"
                     value={form.numero_documento || ''}
@@ -161,7 +178,7 @@ export function ContactNew() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="id_fiscal">NIT / Tax ID</Label>
+                  <Label htmlFor="id_fiscal">NIT / Tax ID *</Label>
                   <Input
                     id="id_fiscal"
                     value={form.id_fiscal || ''}
@@ -179,7 +196,7 @@ export function ContactNew() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="representante_legal">Representante legal</Label>
+                  <Label htmlFor="representante_legal">Representante legal *</Label>
                   <Input
                     id="representante_legal"
                     value={form.representante_legal || ''}
@@ -187,7 +204,7 @@ export function ContactNew() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="numero_documento_representante">Documento representante</Label>
+                  <Label htmlFor="numero_documento_representante">Documento representante *</Label>
                   <Input
                     id="numero_documento_representante"
                     value={form.numero_documento_representante || ''}
@@ -208,52 +225,30 @@ export function ContactNew() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
                 value={form.email || ''}
                 onChange={e => set('email', e.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="celular">Celular</Label>
+              <Label htmlFor="celular">Celular *</Label>
               <Input
                 id="celular"
                 value={form.celular || ''}
                 onChange={e => set('celular', e.target.value)}
+                required
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="telefono">Telefono</Label>
-              <Input
-                id="telefono"
-                value={form.telefono || ''}
-                onChange={e => set('telefono', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="web_redes">Web / Redes</Label>
-              <Input
-                id="web_redes"
-                value={form.web_redes || ''}
-                onChange={e => set('web_redes', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="direccion">Direccion</Label>
-            <Input
-              id="direccion"
-              value={form.direccion || ''}
-              onChange={e => set('direccion', e.target.value)}
-            />
-          </div>
+
+          {/* Ubicación: País → Departamento → Ciudad → Dirección */}
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="pais">Pais</Label>
+              <Label htmlFor="pais">País *</Label>
               <Select
                 id="pais"
                 value={form.pais || 'Colombia'}
@@ -262,6 +257,7 @@ export function ContactNew() {
                   set('departamento', '')
                   set('ciudad', '')
                 }}
+                required
               >
                 {COUNTRIES.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -269,7 +265,7 @@ export function ContactNew() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="departamento">Departamento/Estado</Label>
+              <Label htmlFor="departamento">Departamento/Estado *</Label>
               {hasLocationData(form.pais || 'Colombia') ? (
                 <Select
                   id="departamento"
@@ -278,6 +274,7 @@ export function ContactNew() {
                     set('departamento', e.target.value)
                     set('ciudad', '')
                   }}
+                  required
                 >
                   <option value="">Seleccionar...</option>
                   {getDepartments(form.pais || 'Colombia').map(d => (
@@ -290,16 +287,18 @@ export function ContactNew() {
                   value={form.departamento || ''}
                   onChange={e => set('departamento', e.target.value)}
                   placeholder="Escribir..."
+                  required
                 />
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ciudad">Ciudad</Label>
+              <Label htmlFor="ciudad">Ciudad *</Label>
               {hasLocationData(form.pais || 'Colombia') && form.departamento ? (
                 <Select
                   id="ciudad"
                   value={form.ciudad || ''}
                   onChange={e => set('ciudad', e.target.value)}
+                  required
                 >
                   <option value="">Seleccionar...</option>
                   {getCities(form.pais || 'Colombia', form.departamento).map(c => (
@@ -313,22 +312,53 @@ export function ContactNew() {
                   value={form.ciudad || ''}
                   onChange={e => set('ciudad', e.target.value)}
                   placeholder="Escribir..."
+                  required
                 />
               )}
             </div>
           </div>
           {form.ciudad === '__otro' && (
             <div className="space-y-2">
-              <Label htmlFor="ciudad_manual">Escribir ciudad</Label>
+              <Label htmlFor="ciudad_manual">Escribir ciudad *</Label>
               <Input
                 id="ciudad_manual"
                 value=""
                 onChange={e => set('ciudad', e.target.value)}
                 placeholder="Nombre de la ciudad..."
                 autoFocus
+                required
               />
             </div>
           )}
+          <div className="space-y-2">
+            <Label htmlFor="direccion">Dirección *</Label>
+            <Input
+              id="direccion"
+              value={form.direccion || ''}
+              onChange={e => set('direccion', e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Opcionales */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="telefono">Teléfono fijo <span className="text-[hsl(var(--muted-foreground))] text-xs">(opcional)</span></Label>
+              <Input
+                id="telefono"
+                value={form.telefono || ''}
+                onChange={e => set('telefono', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="web_redes">Web / Redes sociales <span className="text-[hsl(var(--muted-foreground))] text-xs">(opcional)</span></Label>
+              <Input
+                id="web_redes"
+                value={form.web_redes || ''}
+                onChange={e => set('web_redes', e.target.value)}
+              />
+            </div>
+          </div>
 
           {tipoPersona === 'juridica' && (
             <>
