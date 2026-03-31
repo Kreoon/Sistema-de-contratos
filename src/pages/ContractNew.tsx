@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, UserPlus, UserCheck, X } from 'lucide-react'
+import { Search, UserPlus, UserCheck, X, Plus, Trash2 } from 'lucide-react'
 import { useTemplates } from '@/hooks/useTemplates'
 import { supabase } from '@/lib/supabase'
 import { renderTemplate } from '@/lib/template-engine'
@@ -27,6 +27,28 @@ export function ContractNew() {
   const [saving, setSaving] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const navigate = useNavigate()
+
+  // --- Cuotas de pago ---
+  interface Cuota {
+    descripcion: string
+    monto: string
+    fecha: string
+  }
+  const [numCuotas, setNumCuotas] = useState(0)
+  const [cuotas, setCuotas] = useState<Cuota[]>([])
+
+  const handleNumCuotasChange = (n: number) => {
+    setNumCuotas(n)
+    const newCuotas: Cuota[] = []
+    for (let i = 0; i < n; i++) {
+      newCuotas.push(cuotas[i] || { descripcion: i === 0 ? 'Anticipo' : i === n - 1 ? 'Saldo final' : `Cuota ${i + 1}`, monto: '', fecha: '' })
+    }
+    setCuotas(newCuotas)
+  }
+
+  const updateCuota = (index: number, field: keyof Cuota, value: string) => {
+    setCuotas(prev => prev.map((c, i) => i === index ? { ...c, [field]: value } : c))
+  }
 
   // --- Contact selector state ---
   const [contactSearch, setContactSearch] = useState('')
@@ -127,7 +149,17 @@ export function ContractNew() {
     setFormData(prev => ({ ...prev, [key]: value }))
   }
 
-  const templateData = {
+  // Generar texto de forma de pago desde cuotas
+  const formaPagoFromCuotas = cuotas.length > 0
+    ? cuotas.map((c, i) => {
+        const moneda = formData.moneda || 'COP'
+        const monto = c.monto ? new Intl.NumberFormat('es-CO').format(Number(c.monto)) : '___'
+        const fecha = c.fecha ? new Date(c.fecha + 'T12:00:00').toLocaleDateString('es-CO') : '___'
+        return `${c.descripcion || `Cuota ${i + 1}`}: ${moneda} $${monto} - Fecha límite: ${fecha}`
+      }).join('. ')
+    : ''
+
+  const templateData: Record<string, unknown> = {
     org_nombre: ORGANIZER.nombre,
     org_documento_tipo: ORGANIZER.documento_tipo,
     org_documento: ORGANIZER.documento,
@@ -141,8 +173,12 @@ export function ContractNew() {
     org_telefono: ORGANIZER.telefono,
     org_lugar_evento: ORGANIZER.lugar_evento,
     ...formData,
+    // Inyectar forma de pago generada desde cuotas
+    ...(formaPagoFromCuotas ? { forma_pago: formaPagoFromCuotas } : {}),
+    // Pasar cuotas como array para templates que lo usen
+    cuotas: cuotas.filter(c => c.monto && c.fecha),
   }
-  const renderedHtml = selectedTemplate ? renderTemplate(selectedTemplate.content, templateData) : ''
+  const renderedHtml = selectedTemplate ? renderTemplate(selectedTemplate.content, templateData as Record<string, string>) : ''
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
     const persona = formData.tipo_persona
@@ -250,6 +286,23 @@ export function ContractNew() {
         actor_email: user?.email,
         metadata: { signer_email: signerEmail },
       })
+    }
+
+    // 4. Guardar cuotas de pago
+    if (cuotas.length > 0) {
+      const installments = cuotas
+        .filter(c => c.monto && c.fecha)
+        .map((c, i) => ({
+          contract_id: data.id,
+          numero_cuota: i + 1,
+          descripcion: c.descripcion || `Cuota ${i + 1}`,
+          monto: parseFloat(c.monto),
+          moneda: formData.moneda || 'COP',
+          fecha_vencimiento: c.fecha,
+        }))
+      if (installments.length > 0) {
+        await supabase.from('payment_installments').insert(installments)
+      }
     }
 
     toast.success(andSend ? 'Contrato creado y enviado' : 'Contrato guardado como borrador')
@@ -457,6 +510,76 @@ export function ContractNew() {
                     {renderField(variable)}
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Cronograma de pagos */}
+          {selectedTemplate && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Cronograma de Pagos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Label>Número de cuotas</Label>
+                  <Select
+                    value={String(numCuotas)}
+                    onChange={e => handleNumCuotasChange(Number(e.target.value))}
+                    className="w-24"
+                  >
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                  </Select>
+                </div>
+
+                {cuotas.map((cuota, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-3 p-3 border rounded-lg bg-[hsl(var(--secondary))]">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Descripción</Label>
+                      <Input
+                        value={cuota.descripcion}
+                        onChange={e => updateCuota(i, 'descripcion', e.target.value)}
+                        placeholder={`Cuota ${i + 1}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Monto ({formData.moneda || 'COP'}) *</Label>
+                      <Input
+                        type="number"
+                        value={cuota.monto}
+                        onChange={e => updateCuota(i, 'monto', e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Fecha límite *</Label>
+                      <Input
+                        type="date"
+                        value={cuota.fecha}
+                        onChange={e => updateCuota(i, 'fecha', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                {cuotas.length > 0 && (
+                  <div className="text-sm text-[hsl(var(--muted-foreground))] bg-[hsl(var(--secondary))] p-3 rounded">
+                    <p className="font-medium mb-1">Forma de pago (se inyecta en el contrato):</p>
+                    <p>{formaPagoFromCuotas || 'Complete los montos y fechas'}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
