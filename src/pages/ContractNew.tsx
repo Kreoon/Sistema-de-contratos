@@ -578,31 +578,61 @@ export function ContractNew() {
 
                 {/* Campos manuales para medida especial */}
                 {formData.tamano_stand === '__custom' && (
-                  <div className="grid grid-cols-3 gap-3 p-3 border rounded-lg bg-[hsl(var(--secondary))]">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Medidas (ej: 8x5)</Label>
-                      <Input
-                        value={formData._stand_medidas || ''}
-                        onChange={e => handleFieldChange('_stand_medidas', e.target.value)}
-                        placeholder="8x5"
-                      />
+                  <div className="p-3 border rounded-lg bg-[hsl(var(--secondary))] space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Ancho (metros)</Label>
+                        <Input
+                          type="number"
+                          value={formData._stand_ancho || ''}
+                          onChange={e => {
+                            handleFieldChange('_stand_ancho', e.target.value)
+                            const largo = Number(formData._stand_largo || 0)
+                            const ancho = Number(e.target.value || 0)
+                            if (ancho > 0 && largo > 0) {
+                              handleFieldChange('_stand_m2', String(ancho * largo))
+                              handleFieldChange('_stand_medidas', `${ancho}x${largo}`)
+                            }
+                          }}
+                          placeholder="8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Largo (metros)</Label>
+                        <Input
+                          type="number"
+                          value={formData._stand_largo || ''}
+                          onChange={e => {
+                            handleFieldChange('_stand_largo', e.target.value)
+                            const ancho = Number(formData._stand_ancho || 0)
+                            const largo = Number(e.target.value || 0)
+                            if (ancho > 0 && largo > 0) {
+                              handleFieldChange('_stand_m2', String(ancho * largo))
+                              handleFieldChange('_stand_medidas', `${ancho}x${largo}`)
+                            }
+                          }}
+                          placeholder="5"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Metros cuadrados</Label>
-                      <Input
-                        type="number"
-                        value={formData._stand_m2 || ''}
-                        onChange={e => handleFieldChange('_stand_m2', e.target.value)}
-                        placeholder="40"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tipo de stand</Label>
-                      <Input
-                        value={formData._stand_tipo || ''}
-                        onChange={e => handleFieldChange('_stand_tipo', e.target.value)}
-                        placeholder="Isla, Esquinero, etc."
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Metros cuadrados</Label>
+                        <Input
+                          type="text"
+                          value={formData._stand_m2 ? `${formData._stand_m2} m²` : ''}
+                          readOnly
+                          className="bg-white font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Tipo de stand</Label>
+                        <Input
+                          value={formData._stand_tipo || ''}
+                          onChange={e => handleFieldChange('_stand_tipo', e.target.value)}
+                          placeholder="Isla, Esquinero, etc."
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -614,7 +644,7 @@ export function ContractNew() {
                 )}
                 {formData.tamano_stand === '__custom' && formData._stand_m2 && (
                   <p className="text-sm bg-[hsl(var(--secondary))] p-2 rounded">
-                    Seleccionado: <strong>{formData._stand_m2} m² ({formData._stand_medidas || 'medida especial'}{formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})</strong>
+                    Seleccionado: <strong>{formData._stand_m2} m² ({formData._stand_medidas}{formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})</strong>
                   </p>
                 )}
               </CardContent>
