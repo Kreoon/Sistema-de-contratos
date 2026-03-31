@@ -133,7 +133,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
+    {"key": "pais", "label": "País / Nacionalidad", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
     {"key": "representante_legal", "label": "Nombre del representante legal", "type": "text", "required": false},
@@ -259,7 +259,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">ÁREA ARRENDADA Y VALOR</h3>
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
     <thead>
-      <tr style="background: #1a1a1a; color: #fff;">
+      <tr style="background: #e5e7eb; color: #111;">
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Pabellón</th>
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">N.º Stand</th>
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Tamaño</th>
@@ -424,7 +424,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
+    {"key": "pais", "label": "País / Nacionalidad", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
     {"key": "sigla", "label": "Sigla (opcional)", "type": "text", "required": false, "placeholder": "EMP"},
@@ -549,7 +549,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">VALOR DEL PATROCINIO</h3>
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
     <thead>
-      <tr style="background: #1a1a1a; color: #fff;">
+      <tr style="background: #e5e7eb; color: #111;">
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Tipo de patrocinio</th>
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor total (IVA incluido)</th>
         <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor abono</th>
@@ -708,7 +708,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {"key": "nombre_completo", "label": "Nombre completo (persona natural)", "type": "text", "required": false, "placeholder": "Juan García López"},
     {"key": "tipo_documento", "label": "Tipo de documento (persona natural)", "type": "select", "required": false, "options": ["C.C.", "C.E.", "Pasaporte", "DNI", "Tax ID"]},
     {"key": "numero_documento", "label": "Número de documento (persona natural)", "type": "text", "required": false},
-    {"key": "pais", "label": "País / Nacionalidad (si es extranjero)", "type": "text", "required": false, "placeholder": "México"},
+    {"key": "pais", "label": "País / Nacionalidad", "type": "text", "required": false, "placeholder": "México"},
     {"key": "empresa", "label": "Razón social (persona jurídica)", "type": "text", "required": false, "placeholder": "Empresa SAS"},
     {"key": "id_fiscal", "label": "ID fiscal / NIT (persona jurídica)", "type": "text", "required": false, "placeholder": "NIT 900.123.456-7"},
     {"key": "sigla", "label": "Sigla (opcional)", "type": "text", "required": false, "placeholder": "EMP"},
