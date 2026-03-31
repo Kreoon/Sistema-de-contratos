@@ -206,7 +206,7 @@ export function ContractNew() {
   // Campos que se gestionan en secciones especiales, no en "Datos del Contrato"
   const paymentKeys = ['valor_total', 'valor_abono', 'moneda', 'forma_pago', 'honorarios', 'honorarios_letras', 'valor_stand', 'valor_stand_letras', 'valor_patrocinio', 'valor_patrocinio_letras']
   const standKeys = ['tamano_stand', 'pabellon', 'numero_stand', 'ubicacion']
-  // Todos los campos de identidad + contacto: se gestionan en la sección "Contacto"
+  // Todos los campos de identidad + contacto + evento: se gestionan en secciones especiales
   const contactAndIdentityKeys = [
     // Identidad
     'tipo_persona', 'nombre_completo', 'tipo_documento', 'numero_documento',
@@ -217,6 +217,8 @@ export function ContractNew() {
     'telefono', 'celular', 'email', 'email_contratista', 'telefono_contratista',
     'web_redes',
     'persona_encargada', 'email_encargada', 'celular_encargada',
+    // Evento (va en la primera sección)
+    'anio',
   ]
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
@@ -437,11 +439,17 @@ export function ContractNew() {
           {/* Selector de plantilla */}
           <Card>
             <CardHeader><CardTitle className="text-base">Plantilla</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Select onChange={e => handleTemplateSelect(e.target.value)} value={selectedTemplate?.id || ''}>
                 <option value="">Seleccionar plantilla...</option>
                 {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </Select>
+              {selectedTemplate && selectedTemplate.variables.some(v => v.key === 'anio') && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Año del evento *</Label>
+                  <Input value={formData.anio || new Date().getFullYear().toString()} onChange={e => handleFieldChange('anio', e.target.value)} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
