@@ -8,6 +8,7 @@ import { renderTemplate } from '@/lib/template-engine'
 import { ORGANIZER } from '@/lib/organizer'
 import { COUNTRIES } from '@/lib/countries'
 import { getDepartments, getCities, hasLocationData } from '@/lib/locations'
+import { moneyToWords } from '@/lib/number-to-words'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -183,6 +184,16 @@ export function ContractNew() {
       valor_stand: formData.valor_total,
       valor_patrocinio: formData.valor_total,
     } : {}),
+    // Auto-generar valor en letras
+    ...(() => {
+      const val = formData.valor_total || formData.honorarios || ''
+      const letras = val ? moneyToWords(val, formData.moneda || 'COP') : ''
+      return letras ? {
+        honorarios_letras: letras,
+        valor_stand_letras: letras,
+        valor_patrocinio_letras: letras,
+      } : {}
+    })(),
     // Pasar cuotas como array para templates que lo usen
     cuotas: cuotas.filter(c => c.monto && c.fecha),
   }
@@ -562,19 +573,14 @@ export function ContractNew() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Valor en letras</Label>
-                  <Input
-                    type="text"
-                    value={formData.valor_stand_letras || formData.honorarios_letras || formData.valor_patrocinio_letras || ''}
-                    onChange={e => {
-                      handleFieldChange('valor_stand_letras', e.target.value)
-                      handleFieldChange('honorarios_letras', e.target.value)
-                      handleFieldChange('valor_patrocinio_letras', e.target.value)
-                    }}
-                    placeholder="Diez millones de pesos colombianos"
-                  />
-                </div>
+                {(formData.valor_total || formData.honorarios) && (
+                  <div className="text-sm bg-[hsl(var(--secondary))] p-3 rounded">
+                    <span className="text-[hsl(var(--muted-foreground))]">En letras: </span>
+                    <span className="font-medium">
+                      {moneyToWords(formData.valor_total || formData.honorarios || '0', formData.moneda || 'COP')}
+                    </span>
+                  </div>
+                )}
 
                 {/* Modalidad de pago */}
                 <div className="space-y-2">
