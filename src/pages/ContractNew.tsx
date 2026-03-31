@@ -206,8 +206,13 @@ export function ContractNew() {
   // Campos que se gestionan en secciones especiales, no en "Datos del Contrato"
   const paymentKeys = ['valor_total', 'valor_abono', 'moneda', 'forma_pago', 'honorarios', 'honorarios_letras', 'valor_stand', 'valor_stand_letras', 'valor_patrocinio', 'valor_patrocinio_letras']
   const standKeys = ['tamano_stand', 'pabellon', 'numero_stand', 'ubicacion']
-  // Campos de contacto: se gestionan desde la sección "Contacto" (auto-llenados o manuales)
-  const contactKeys = [
+  // Todos los campos de identidad + contacto: se gestionan en la sección "Contacto"
+  const contactAndIdentityKeys = [
+    // Identidad
+    'tipo_persona', 'nombre_completo', 'tipo_documento', 'numero_documento',
+    'empresa', 'id_fiscal', 'sigla', 'representante_legal',
+    'tipo_documento_representante', 'numero_documento_representante',
+    // Contacto
     'direccion', 'ciudad', 'departamento', 'pais',
     'telefono', 'celular', 'email', 'email_contratista', 'telefono_contratista',
     'web_redes',
@@ -215,16 +220,9 @@ export function ContractNew() {
   ]
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
-    // Ocultar campos gestionados en secciones especiales
     if (paymentKeys.includes(v.key)) return false
     if (standKeys.includes(v.key)) return false
-    if (contactKeys.includes(v.key)) return false
-    const persona = formData.tipo_persona
-    const naturalOnly = ['nombre_completo', 'tipo_documento', 'numero_documento']
-    const juridicaOnly = ['empresa', 'id_fiscal', 'sigla', 'representante_legal', 'tipo_documento_representante', 'numero_documento_representante']
-    if (!persona) return true
-    if (naturalOnly.includes(v.key) && persona === 'Persona Jurídica') return false
-    if (juridicaOnly.includes(v.key) && persona === 'Persona Natural') return false
+    if (contactAndIdentityKeys.includes(v.key)) return false
     return true
   }) ?? []
 
@@ -525,82 +523,145 @@ export function ContractNew() {
                   </div>
                 )}
 
-                {/* Campos de contacto inline (cuando no hay contacto seleccionado) */}
-                {!selectedContact && formData.tipo_persona && (
+                {/* Todos los campos de identidad + contacto (cuando no hay contacto seleccionado) */}
+                {!selectedContact && (
                   <>
                     <hr className="my-2" />
-                    <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Datos de contacto</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Email *</Label>
-                        <Input
-                          type="email"
-                          value={formData.email || formData.email_contratista || ''}
-                          onChange={e => { handleFieldChange('email', e.target.value); handleFieldChange('email_contratista', e.target.value) }}
-                          placeholder="correo@empresa.com"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Celular *</Label>
-                        <Input
-                          value={formData.celular || ''}
-                          onChange={e => handleFieldChange('celular', e.target.value)}
-                          placeholder="+57 300 0000000"
-                        />
+
+                    {/* 1. Tipo de persona */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Tipo de persona *</Label>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant={formData.tipo_persona === 'Persona Natural' ? 'default' : 'outline'}
+                          onClick={() => handleFieldChange('tipo_persona', 'Persona Natural')}>Persona Natural</Button>
+                        <Button type="button" size="sm" variant={formData.tipo_persona === 'Persona Jurídica' ? 'default' : 'outline'}
+                          onClick={() => handleFieldChange('tipo_persona', 'Persona Jurídica')}>Persona Jurídica</Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">País *</Label>
-                        <Select
-                          value={formData.pais || ''}
-                          onChange={e => { handleFieldChange('pais', e.target.value); handleFieldChange('departamento', ''); handleFieldChange('ciudad', '') }}
-                        >
-                          <option value="">Seleccionar...</option>
-                          {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Departamento *</Label>
-                        {hasLocationData(formData.pais || '') ? (
-                          <Select
-                            value={formData.departamento || ''}
-                            onChange={e => { handleFieldChange('departamento', e.target.value); handleFieldChange('ciudad', '') }}
-                          >
-                            <option value="">Seleccionar...</option>
-                            {getDepartments(formData.pais).map(d => <option key={d} value={d}>{d}</option>)}
-                          </Select>
-                        ) : (
-                          <Input value={formData.departamento || ''} onChange={e => handleFieldChange('departamento', e.target.value)} placeholder="Escribir..." />
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Ciudad *</Label>
-                        {hasLocationData(formData.pais || '') && formData.departamento ? (
-                          <Select value={formData.ciudad || ''} onChange={e => handleFieldChange('ciudad', e.target.value)}>
-                            <option value="">Seleccionar...</option>
-                            {getCities(formData.pais, formData.departamento).map(c => <option key={c} value={c}>{c}</option>)}
-                            <option value="__otra">Otra...</option>
-                          </Select>
-                        ) : (
-                          <Input value={formData.ciudad || ''} onChange={e => handleFieldChange('ciudad', e.target.value)} placeholder="Escribir..." />
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Dirección *</Label>
-                      <Input value={formData.direccion || ''} onChange={e => handleFieldChange('direccion', e.target.value)} placeholder="Calle 10 # 20-30" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Teléfono fijo <span className="text-[hsl(var(--muted-foreground))]">(opcional)</span></Label>
-                        <Input value={formData.telefono || ''} onChange={e => handleFieldChange('telefono', e.target.value)} />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Web / Redes <span className="text-[hsl(var(--muted-foreground))]">(opcional)</span></Label>
-                        <Input value={formData.web_redes || ''} onChange={e => handleFieldChange('web_redes', e.target.value)} />
-                      </div>
-                    </div>
+
+                    {/* 2. Identificación según tipo */}
+                    {formData.tipo_persona === 'Persona Natural' && (
+                      <>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Nombre completo *</Label>
+                          <Input value={formData.nombre_completo || ''} onChange={e => handleFieldChange('nombre_completo', e.target.value)} placeholder="Juan García López" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Tipo documento *</Label>
+                            <Select value={formData.tipo_documento || ''} onChange={e => handleFieldChange('tipo_documento', e.target.value)}>
+                              <option value="">Seleccionar...</option>
+                              <option value="C.C.">C.C.</option>
+                              <option value="C.E.">C.E.</option>
+                              <option value="Pasaporte">Pasaporte</option>
+                              <option value="DNI">DNI</option>
+                              <option value="Tax ID">Tax ID</option>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Número documento *</Label>
+                            <Input value={formData.numero_documento || ''} onChange={e => handleFieldChange('numero_documento', e.target.value)} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {formData.tipo_persona === 'Persona Jurídica' && (
+                      <>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Razón social *</Label>
+                            <Input value={formData.empresa || ''} onChange={e => handleFieldChange('empresa', e.target.value)} placeholder="Empresa S.A.S." />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">NIT / Tax ID *</Label>
+                            <Input value={formData.id_fiscal || ''} onChange={e => handleFieldChange('id_fiscal', e.target.value)} placeholder="900.123.456-7" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Sigla <span className="text-[hsl(var(--muted-foreground))]">(opcional)</span></Label>
+                          <Input value={formData.sigla || ''} onChange={e => handleFieldChange('sigla', e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Representante legal *</Label>
+                            <Input value={formData.representante_legal || ''} onChange={e => handleFieldChange('representante_legal', e.target.value)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Documento representante *</Label>
+                            <Input value={formData.numero_documento_representante || ''} onChange={e => handleFieldChange('numero_documento_representante', e.target.value)} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* 3. Datos de contacto (solo después de seleccionar tipo persona) */}
+                    {formData.tipo_persona && (
+                      <>
+                        <hr className="my-1" />
+                        <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Datos de contacto</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Email *</Label>
+                            <Input type="email" value={formData.email || formData.email_contratista || ''}
+                              onChange={e => { handleFieldChange('email', e.target.value); handleFieldChange('email_contratista', e.target.value) }}
+                              placeholder="correo@empresa.com" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Celular *</Label>
+                            <Input value={formData.celular || ''} onChange={e => handleFieldChange('celular', e.target.value)} placeholder="+57 300 0000000" />
+                          </div>
+                        </div>
+
+                        {/* 4. Ubicación: País → Departamento → Ciudad → Dirección */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">País *</Label>
+                            <Select value={formData.pais || ''} onChange={e => { handleFieldChange('pais', e.target.value); handleFieldChange('departamento', ''); handleFieldChange('ciudad', '') }}>
+                              <option value="">Seleccionar...</option>
+                              {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Departamento *</Label>
+                            {hasLocationData(formData.pais || '') ? (
+                              <Select value={formData.departamento || ''} onChange={e => { handleFieldChange('departamento', e.target.value); handleFieldChange('ciudad', '') }}>
+                                <option value="">Seleccionar...</option>
+                                {getDepartments(formData.pais).map(d => <option key={d} value={d}>{d}</option>)}
+                              </Select>
+                            ) : (
+                              <Input value={formData.departamento || ''} onChange={e => handleFieldChange('departamento', e.target.value)} placeholder="Escribir..." />
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Ciudad *</Label>
+                            {hasLocationData(formData.pais || '') && formData.departamento ? (
+                              <Select value={formData.ciudad || ''} onChange={e => handleFieldChange('ciudad', e.target.value)}>
+                                <option value="">Seleccionar...</option>
+                                {getCities(formData.pais, formData.departamento).map(c => <option key={c} value={c}>{c}</option>)}
+                                <option value="__otra">Otra...</option>
+                              </Select>
+                            ) : (
+                              <Input value={formData.ciudad || ''} onChange={e => handleFieldChange('ciudad', e.target.value)} placeholder="Escribir..." />
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Dirección *</Label>
+                          <Input value={formData.direccion || ''} onChange={e => handleFieldChange('direccion', e.target.value)} placeholder="Calle 10 # 20-30" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Teléfono fijo <span className="text-[hsl(var(--muted-foreground))]">(opcional)</span></Label>
+                            <Input value={formData.telefono || ''} onChange={e => handleFieldChange('telefono', e.target.value)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Web / Redes <span className="text-[hsl(var(--muted-foreground))]">(opcional)</span></Label>
+                            <Input value={formData.web_redes || ''} onChange={e => handleFieldChange('web_redes', e.target.value)} />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </CardContent>
