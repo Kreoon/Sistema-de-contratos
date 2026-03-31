@@ -672,6 +672,15 @@ export function ContractNew() {
                     )}
                   </>
                 )}
+
+                {/* Resumen firmante */}
+                {signerName && (
+                  <div className="mt-2 p-2 bg-[hsl(var(--secondary))] rounded text-xs text-[hsl(var(--muted-foreground))]">
+                    Firmante: <strong className="text-[hsl(var(--foreground))]">{signerName}</strong>
+                    {signerCompany ? ` · ${signerCompany}` : ''}
+                    {signerEmail ? ` · ${signerEmail}` : ''}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -836,16 +845,11 @@ export function ContractNew() {
             </Card>
           )}
 
-          {/* Datos del contrato */}
-          {selectedTemplate && (
+          {/* Datos del contrato (solo si quedan variables no gestionadas en otras secciones) */}
+          {selectedTemplate && visibleVariables.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Datos del Contrato</CardTitle>
-                {signerName && (
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                    Firmante: {signerName}{signerCompany ? ` · ${signerCompany}` : ''}{signerEmail ? ` · ${signerEmail}` : ''}
-                  </p>
-                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {visibleVariables.map(variable => (
