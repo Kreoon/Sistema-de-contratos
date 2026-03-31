@@ -205,7 +205,7 @@ export function ContractNew() {
 
   // Campos que se gestionan en secciones especiales, no en "Datos del Contrato"
   const paymentKeys = ['valor_total', 'valor_abono', 'moneda', 'forma_pago', 'honorarios', 'honorarios_letras', 'valor_stand', 'valor_stand_letras', 'valor_patrocinio', 'valor_patrocinio_letras']
-  const standKeys = ['tamano_stand']
+  const standKeys = ['tamano_stand', 'pabellon', 'numero_stand', 'ubicacion']
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
     // Ocultar campos gestionados en secciones especiales
@@ -647,6 +647,35 @@ export function ContractNew() {
                     Seleccionado: <strong>{formData._stand_m2} m² ({formData._stand_medidas}{formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})</strong>
                   </p>
                 )}
+
+                {/* Ubicación del stand */}
+                <hr />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label>Pabellón</Label>
+                    <Input
+                      value={formData.pabellon || ''}
+                      onChange={e => handleFieldChange('pabellon', e.target.value)}
+                      placeholder="A"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>N.º Stand</Label>
+                    <Input
+                      value={formData.numero_stand || ''}
+                      onChange={e => handleFieldChange('numero_stand', e.target.value)}
+                      placeholder="A-15"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ubicación</Label>
+                    <Input
+                      value={formData.ubicacion || ''}
+                      onChange={e => handleFieldChange('ubicacion', e.target.value)}
+                      placeholder="Pasillo 3, esquina norte"
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
