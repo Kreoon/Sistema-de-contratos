@@ -143,7 +143,8 @@ export function ContractNew() {
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId)
     setSelectedTemplate(template || null)
-    if (!selectedContact) setFormData({})
+    if (!selectedContact) setFormData({ anio: new Date().getFullYear().toString() })
+    else setFormData(prev => ({ ...prev, anio: new Date().getFullYear().toString() }))
   }
 
   const handleFieldChange = (key: string, value: string) => {
@@ -160,6 +161,19 @@ export function ContractNew() {
       }).join('. ')
     : ''
 
+  // Formatear monto como moneda
+  const mon = formData.moneda || 'COP'
+  const fmtMoney = (val: string) => {
+    const num = parseFloat(val.replace(/[.,\s]/g, ''))
+    if (isNaN(num)) return val
+    return '$' + new Intl.NumberFormat('es-CO').format(num)
+  }
+
+  const rawTotal = formData.valor_total || formData.honorarios || ''
+  const fmtTotal = rawTotal ? fmtMoney(rawTotal) : ''
+  const rawAbono = cuotas.length > 0 && cuotas[0].monto ? cuotas[0].monto : ''
+  const fmtAbono = rawAbono ? fmtMoney(rawAbono) : ''
+
   const templateData: Record<string, unknown> = {
     org_nombre: ORGANIZER.nombre,
     org_documento_tipo: ORGANIZER.documento_tipo,
@@ -174,31 +188,29 @@ export function ContractNew() {
     org_telefono: ORGANIZER.telefono,
     org_lugar_evento: ORGANIZER.lugar_evento,
     ...formData,
-    // Inyectar forma de pago generada desde cuotas
-    ...(formaPagoFromCuotas ? { forma_pago: formaPagoFromCuotas } : {}),
-    // Valor abono = primera cuota (si hay cuotas)
-    ...(cuotas.length > 0 && cuotas[0].monto ? { valor_abono: cuotas[0].monto } : {}),
-    // Sincronizar valor_total con honorarios/valor_patrocinio para templates
-    ...(formData.valor_total ? {
-      honorarios: formData.valor_total,
-      valor_stand: formData.valor_total,
-      valor_patrocinio: formData.valor_total,
+    // Montos formateados para el contrato
+    ...(rawTotal ? {
+      valor_total: `${fmtTotal} ${mon}`,
+      honorarios: `${fmtTotal} ${mon}`,
+      valor_stand: `${fmtTotal} ${mon}`,
+      valor_patrocinio: `${fmtTotal} ${mon}`,
     } : {}),
+    ...(rawAbono ? { valor_abono: `${fmtAbono} ${mon}` } : {}),
     // Auto-generar valor en letras
     ...(() => {
-      const val = formData.valor_total || formData.honorarios || ''
-      const letras = val ? moneyToWords(val, formData.moneda || 'COP') : ''
+      const letras = rawTotal ? moneyToWords(rawTotal, mon) : ''
       return letras ? {
         honorarios_letras: letras,
         valor_stand_letras: letras,
         valor_patrocinio_letras: letras,
       } : {}
     })(),
-    // Stand custom: construir valor real de tamano_stand
+    // Inyectar forma de pago generada desde cuotas
+    ...(formaPagoFromCuotas ? { forma_pago: formaPagoFromCuotas } : {}),
+    // Stand custom
     ...(formData.tamano_stand === '__custom' && formData._stand_m2 ? {
       tamano_stand: `${formData._stand_m2} m² (${formData._stand_medidas || 'medida especial'}${formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})`,
     } : {}),
-    // Pasar cuotas como array para templates que lo usen
     cuotas: cuotas.filter(c => c.monto && c.fecha),
   }
   const renderedHtml = selectedTemplate ? renderTemplate(selectedTemplate.content, templateData as Record<string, string>) : ''

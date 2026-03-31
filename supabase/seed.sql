@@ -64,7 +64,10 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
   </ol>
 
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CUARTA. REMUNERACIÓN</h3>
-  <p style="text-align: justify; margin-bottom: 12px;">Como contraprestación por los servicios objeto del presente contrato, EL CONTRATANTE pagará a EL CONTRATISTA la suma de <strong>{{honorarios}} {{moneda}}</strong> ({{honorarios_letras}}). La forma de pago será la siguiente: {{forma_pago}}.</p>
+  <p style="text-align: justify; margin-bottom: 12px;">Como contraprestación por los servicios objeto del presente contrato, EL CONTRATANTE pagará a EL CONTRATISTA la suma de <strong>{{honorarios}} {{moneda}}</strong> ({{honorarios_letras}}).</p>
+  {{#if forma_pago}}
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Forma de pago:</strong> {{forma_pago}}</p>
+  {{/if}}
   <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1:</strong> EL CONTRATANTE no iniciará el proceso de pago del segundo desembolso sin antes haber verificado su efectivo recibo. El CONTRATISTA deberá confirmar la recepción del pago correspondiente.</p>
   <p style="text-align: justify; margin-bottom: 24px;"><strong>Parágrafo 2:</strong> En caso de incumplimiento de las obligaciones por parte de EL CONTRATISTA, EL CONTRATANTE podrá dar por terminado unilateralmente el presente contrato y retener los valores pagados a título de cláusula penal, sin perjuicio de las acciones legales a que haya lugar.</p>
 
@@ -325,7 +328,10 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
   <p style="text-align: justify; margin-bottom: 24px;">El presente contrato tendrá vigencia desde la fecha de su suscripción y hasta el 19 de octubre de {{anio}}, fecha en que deberá haberse efectuado el desmontaje total del stand.</p>
 
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">OCTAVA. REMUNERACIÓN</h3>
-  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> como contraprestación por la concesión del espacio físico descrito en el presente contrato. El valor de abono es de <strong>{{valor_abono}} {{moneda}}</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> ({{valor_stand_letras}}) como contraprestación por la concesión del espacio físico descrito en el presente contrato.</p>
+  {{#if forma_pago}}
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Forma de pago:</strong> {{forma_pago}}</p>
+  {{/if}}
   <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1 — Mora:</strong> El retardo en el pago de cualquiera de las cuotas pactadas causará intereses de mora a la tasa máxima legal permitida, sin perjuicio de la facultad de EL CONCEDENTE de dar por terminado el contrato.</p>
   <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 2 — Cancelaciones y devoluciones:</strong> En caso de cancelación por parte de EL CONCESIONARIO, se aplicarán las siguientes penalizaciones sobre el valor total del contrato:
     <br>- Cancelación con 0 a 45 días antes del evento: retención del 45% del valor total.
@@ -608,7 +614,10 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
   <p style="text-align: justify; margin-bottom: 24px;">El presente contrato tendrá vigencia desde la fecha de su suscripción y hasta la culminación de la Feria Effix {{anio}}, incluyendo el desmontaje de los elementos del patrocinio, si aplica.</p>
 
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">OCTAVA. REMUNERACIÓN</h3>
-  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> como contraprestación por el patrocinio, alianza estratégica y/o espacio físico descritos en el presente contrato. El valor de abono es de <strong>{{valor_abono}} {{moneda}}</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 12px;">EL CONCESIONARIO pagará a EL CONCEDENTE la suma de <strong>{{valor_total}} {{moneda}}</strong> ({{valor_patrocinio_letras}}) como contraprestación por el patrocinio, alianza estratégica y/o espacio físico descritos en el presente contrato.</p>
+  {{#if forma_pago}}
+  <p style="text-align: justify; margin-bottom: 12px;"><strong>Forma de pago:</strong> {{forma_pago}}</p>
+  {{/if}}
   <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 1 — Mora:</strong> El retardo en el pago de cualquiera de las cuotas pactadas causará intereses de mora a la tasa máxima legal permitida, sin perjuicio de la facultad de EL CONCEDENTE de dar por terminado el contrato.</p>
   <p style="text-align: justify; margin-bottom: 12px;"><strong>Parágrafo 2 — Cancelaciones y devoluciones:</strong> En caso de cancelación del stand, patrocinio y/o alianza estratégica por parte de EL CONCESIONARIO, se aplicarán las siguientes penalizaciones sobre el valor total del contrato:
     <br>- Cancelación con 0 a 45 días antes del evento: retención del 45% del valor total.
