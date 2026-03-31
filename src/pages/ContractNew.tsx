@@ -194,6 +194,10 @@ export function ContractNew() {
         valor_patrocinio_letras: letras,
       } : {}
     })(),
+    // Stand custom: construir valor real de tamano_stand
+    ...(formData.tamano_stand === '__custom' && formData._stand_m2 ? {
+      tamano_stand: `${formData._stand_m2} m² (${formData._stand_medidas || 'medida especial'}${formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})`,
+    } : {}),
     // Pasar cuotas como array para templates que lo usen
     cuotas: cuotas.filter(c => c.monto && c.fecha),
   }
@@ -557,10 +561,60 @@ export function ContractNew() {
                       </button>
                     )
                   })}
+                  {/* Botón Otro / Especial */}
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('tamano_stand', '__custom')}
+                    className={`p-3 border rounded-lg text-center transition-colors ${
+                      formData.tamano_stand === '__custom'
+                        ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]'
+                        : 'hover:bg-[hsl(var(--secondary))] border-dashed'
+                    }`}
+                  >
+                    <p className="font-bold text-lg">Otro</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Medida especial</p>
+                  </button>
                 </div>
-                {formData.tamano_stand && (
+
+                {/* Campos manuales para medida especial */}
+                {formData.tamano_stand === '__custom' && (
+                  <div className="grid grid-cols-3 gap-3 p-3 border rounded-lg bg-[hsl(var(--secondary))]">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Medidas (ej: 8x5)</Label>
+                      <Input
+                        value={formData._stand_medidas || ''}
+                        onChange={e => handleFieldChange('_stand_medidas', e.target.value)}
+                        placeholder="8x5"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Metros cuadrados</Label>
+                      <Input
+                        type="number"
+                        value={formData._stand_m2 || ''}
+                        onChange={e => handleFieldChange('_stand_m2', e.target.value)}
+                        placeholder="40"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tipo de stand</Label>
+                      <Input
+                        value={formData._stand_tipo || ''}
+                        onChange={e => handleFieldChange('_stand_tipo', e.target.value)}
+                        placeholder="Isla, Esquinero, etc."
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {formData.tamano_stand && formData.tamano_stand !== '__custom' && (
                   <p className="text-sm bg-[hsl(var(--secondary))] p-2 rounded">
                     Seleccionado: <strong>{formData.tamano_stand}</strong>
+                  </p>
+                )}
+                {formData.tamano_stand === '__custom' && formData._stand_m2 && (
+                  <p className="text-sm bg-[hsl(var(--secondary))] p-2 rounded">
+                    Seleccionado: <strong>{formData._stand_m2} m² ({formData._stand_medidas || 'medida especial'}{formData._stand_tipo ? ` - ${formData._stand_tipo}` : ''})</strong>
                   </p>
                 )}
               </CardContent>
