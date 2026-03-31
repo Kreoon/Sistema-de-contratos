@@ -175,12 +175,25 @@ export function ContractNew() {
     ...formData,
     // Inyectar forma de pago generada desde cuotas
     ...(formaPagoFromCuotas ? { forma_pago: formaPagoFromCuotas } : {}),
+    // Valor abono = primera cuota (si hay cuotas)
+    ...(cuotas.length > 0 && cuotas[0].monto ? { valor_abono: cuotas[0].monto } : {}),
+    // Sincronizar valor_total con honorarios/valor_patrocinio para templates
+    ...(formData.valor_total ? {
+      honorarios: formData.valor_total,
+      valor_stand: formData.valor_total,
+      valor_patrocinio: formData.valor_total,
+    } : {}),
     // Pasar cuotas como array para templates que lo usen
     cuotas: cuotas.filter(c => c.monto && c.fecha),
   }
   const renderedHtml = selectedTemplate ? renderTemplate(selectedTemplate.content, templateData as Record<string, string>) : ''
 
+  // Campos que se gestionan en la sección de pagos, no en "Datos del Contrato"
+  const paymentKeys = ['valor_total', 'valor_abono', 'moneda', 'forma_pago', 'honorarios', 'honorarios_letras', 'valor_stand', 'valor_stand_letras', 'valor_patrocinio', 'valor_patrocinio_letras']
+
   const visibleVariables = selectedTemplate?.variables.filter(v => {
+    // Ocultar campos de pago (se gestionan aparte)
+    if (paymentKeys.includes(v.key)) return false
     const persona = formData.tipo_persona
     const naturalOnly = ['nombre_completo', 'tipo_documento', 'numero_documento']
     const juridicaOnly = ['empresa', 'id_fiscal', 'sigla', 'representante_legal', 'tipo_documento_representante', 'numero_documento_representante']
@@ -514,36 +527,108 @@ export function ContractNew() {
             </Card>
           )}
 
-          {/* Cronograma de pagos */}
+          {/* Valor y Cronograma de pagos */}
           {selectedTemplate && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Cronograma de Pagos</CardTitle>
+                <CardTitle className="text-base">Valor y Forma de Pago</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Label>Número de cuotas</Label>
-                  <Select
-                    value={String(numCuotas)}
-                    onChange={e => handleNumCuotasChange(Number(e.target.value))}
-                    className="w-24"
-                  >
-                    <option value="0">0</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                  </Select>
+                {/* Valor total y moneda */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2 col-span-2">
+                    <Label>Valor total (IVA incluido) *</Label>
+                    <Input
+                      type="text"
+                      value={formData.valor_total || formData.honorarios || ''}
+                      onChange={e => {
+                        // Actualizar todos los posibles keys de valor según template
+                        handleFieldChange('valor_total', e.target.value)
+                        handleFieldChange('honorarios', e.target.value)
+                      }}
+                      placeholder="10.000.000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Moneda</Label>
+                    <Select
+                      value={formData.moneda || 'COP'}
+                      onChange={e => handleFieldChange('moneda', e.target.value)}
+                    >
+                      <option value="COP">COP</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                    </Select>
+                  </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Valor en letras</Label>
+                  <Input
+                    type="text"
+                    value={formData.valor_stand_letras || formData.honorarios_letras || formData.valor_patrocinio_letras || ''}
+                    onChange={e => {
+                      handleFieldChange('valor_stand_letras', e.target.value)
+                      handleFieldChange('honorarios_letras', e.target.value)
+                      handleFieldChange('valor_patrocinio_letras', e.target.value)
+                    }}
+                    placeholder="Diez millones de pesos colombianos"
+                  />
+                </div>
+
+                {/* Modalidad de pago */}
+                <div className="space-y-2">
+                  <Label>Modalidad de pago</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={numCuotas === 1 ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        handleNumCuotasChange(1)
+                        setCuotas([{ descripcion: 'Pago único de contado', monto: formData.valor_total || formData.honorarios || '', fecha: '' }])
+                      }}
+                    >
+                      Pago de contado
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={numCuotas > 1 ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        if (numCuotas <= 1) handleNumCuotasChange(2)
+                      }}
+                    >
+                      Pago por cuotas
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={numCuotas === 0 ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleNumCuotasChange(0)}
+                    >
+                      Sin definir aún
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Número de cuotas (solo si es por cuotas) */}
+                {numCuotas > 1 && (
+                  <div className="flex items-center gap-3">
+                    <Label>Número de cuotas</Label>
+                    <Select
+                      value={String(numCuotas)}
+                      onChange={e => handleNumCuotasChange(Number(e.target.value))}
+                      className="w-24"
+                    >
+                      {[2,3,4,5,6,7,8,9,10,11,12].map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+
+                {/* Detalle de cuotas */}
                 {cuotas.map((cuota, i) => (
                   <div key={i} className="grid grid-cols-3 gap-3 p-3 border rounded-lg bg-[hsl(var(--secondary))]">
                     <div className="space-y-1">
@@ -574,10 +659,26 @@ export function ContractNew() {
                   </div>
                 ))}
 
-                {cuotas.length > 0 && (
-                  <div className="text-sm text-[hsl(var(--muted-foreground))] bg-[hsl(var(--secondary))] p-3 rounded">
-                    <p className="font-medium mb-1">Forma de pago (se inyecta en el contrato):</p>
-                    <p>{formaPagoFromCuotas || 'Complete los montos y fechas'}</p>
+                {/* Resumen de pagos */}
+                {cuotas.length > 0 && cuotas.some(c => c.monto) && (
+                  <div className="text-sm bg-[hsl(var(--secondary))] p-3 rounded space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(var(--muted-foreground))]">Total cuotas:</span>
+                      <span className="font-medium">
+                        {formData.moneda || 'COP'} ${new Intl.NumberFormat('es-CO').format(cuotas.reduce((s, c) => s + (Number(c.monto) || 0), 0))}
+                      </span>
+                    </div>
+                    {formData.valor_total && (
+                      <div className="flex justify-between">
+                        <span className="text-[hsl(var(--muted-foreground))]">Diferencia con valor total:</span>
+                        <span className={`font-medium ${Math.abs(Number(formData.valor_total) - cuotas.reduce((s, c) => s + (Number(c.monto) || 0), 0)) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {formData.moneda || 'COP'} ${new Intl.NumberFormat('es-CO').format(Number(formData.valor_total) - cuotas.reduce((s, c) => s + (Number(c.monto) || 0), 0))}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] pt-2 border-t mt-2">
+                      <strong>Forma de pago en contrato:</strong> {formaPagoFromCuotas}
+                    </p>
                   </div>
                 )}
               </CardContent>
