@@ -220,8 +220,8 @@ export function SignPage() {
 
       toast.success('Contrato firmado exitosamente')
 
-      // Generar PDF con certificado (el servidor envía la copia por email automáticamente)
-      supabase.functions.invoke('generate-pdf', {
+      // Generar PDF con certificado y enviar copia por email (await para que no se corte)
+      await supabase.functions.invoke('generate-pdf', {
         body: { contractId: contract.id },
       })
 

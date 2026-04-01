@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, Copy, Send, Download, Clock, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Copy, Send, Download, Clock, ExternalLink, Mail, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +15,9 @@ export function ContractDetail() {
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
   const [signature, setSignature] = useState<Signature | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [resendingCopy, setResendingCopy] = useState(false)
+  const [regeneratingPdf, setRegeneratingPdf] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -81,6 +84,64 @@ export function ContractDetail() {
     signed: 'Contrato firmado',
     downloaded: 'PDF descargado',
     email_sent: 'Email enviado',
+  }
+
+  const sendSigningEmail = async () => {
+    if (!contract) return
+    setSendingEmail(true)
+    try {
+      const { error } = await supabase.functions.invoke('send-contract', {
+        body: {
+          contractId: contract.id,
+          signerEmail: contract.signer_email,
+          signerName: contract.signer_name,
+          signingUrl: `${window.location.origin}/sign/${contract.signing_token}`,
+          contractTitle: contract.title,
+        },
+      })
+      if (error) throw error
+
+      // Marcar como enviado si estaba en draft
+      if (contract.status === 'draft') {
+        await supabase.from('contracts')
+          .update({ status: 'sent', sent_at: new Date().toISOString() })
+          .eq('id', contract.id)
+        setContract(prev => prev ? { ...prev, status: 'sent' as ContractStatus, sent_at: new Date().toISOString() } : null)
+      }
+
+      toast.success('Email de firma enviado')
+    } catch {
+      toast.error('Error enviando email')
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
+  const resendSignedCopy = async () => {
+    if (!contract) return
+    setResendingCopy(true)
+    try {
+      // Si no tiene PDF, regenerar primero
+      if (!contract.signed_pdf_url) {
+        setRegeneratingPdf(true)
+        const { error: pdfError } = await supabase.functions.invoke('generate-pdf', {
+          body: { contractId: contract.id },
+        })
+        setRegeneratingPdf(false)
+        if (pdfError) throw pdfError
+      } else {
+        const { error } = await supabase.functions.invoke('send-signed-copy', {
+          body: { contractId: contract.id },
+        })
+        if (error) throw error
+      }
+      toast.success('Copia firmada enviada por email')
+    } catch {
+      toast.error('Error enviando copia firmada')
+    } finally {
+      setResendingCopy(false)
+      setRegeneratingPdf(false)
+    }
   }
 
   if (loading) {
@@ -163,11 +224,23 @@ export function ContractDetail() {
                   <Copy size={14} />
                 </Button>
               </div>
-              <div className="flex gap-2">
-                {contract.status === 'draft' && (
-                  <Button size="sm" onClick={markAsSent}>
-                    <Send size={14} className="mr-1" />
-                    Marcar Enviado
+              <div className="flex flex-wrap gap-2">
+                {['draft', 'sent', 'viewed'].includes(contract.status) && (
+                  <Button size="sm" onClick={sendSigningEmail} disabled={sendingEmail}>
+                    {sendingEmail ? (
+                      <><RefreshCw size={14} className="mr-1 animate-spin" /> Enviando...</>
+                    ) : (
+                      <><Mail size={14} className="mr-1" /> {contract.status === 'draft' ? 'Enviar por Email' : 'Reenviar Email'}</>
+                    )}
+                  </Button>
+                )}
+                {['signed', 'completed'].includes(contract.status) && (
+                  <Button size="sm" variant="outline" onClick={resendSignedCopy} disabled={resendingCopy}>
+                    {resendingCopy ? (
+                      <><RefreshCw size={14} className="mr-1 animate-spin" /> {regeneratingPdf ? 'Generando PDF...' : 'Enviando...'}</>
+                    ) : (
+                      <><Mail size={14} className="mr-1" /> Reenviar Copia Firmada</>
+                    )}
                   </Button>
                 )}
                 <a href={signingUrl} target="_blank" rel="noopener noreferrer">
