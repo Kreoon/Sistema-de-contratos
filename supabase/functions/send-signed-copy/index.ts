@@ -54,28 +54,16 @@ serve(async (req) => {
       ? new Date(signature.consent_accepted_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })
       : 'N/A'
 
-    const downloadUrl = contract.signed_pdf_url || ''
+    // Build device info for email
+    const deviceStr = signature?.device_info
+      ? `${signature.device_info.browser || ''} / ${signature.device_info.os || ''} (${signature.device_info.device_type || ''})`
+      : 'N/A'
 
-    // Descargar el HTML firmado para adjuntarlo al email
-    let attachments: Array<{ filename: string; content: string }> = []
-    if (downloadUrl) {
-      try {
-        const htmlRes = await fetch(downloadUrl)
-        if (htmlRes.ok) {
-          const htmlContent = await htmlRes.text()
-          // Convertir a base64 para adjuntar en Resend
-          const base64Content = btoa(unescape(encodeURIComponent(htmlContent)))
-          attachments = [{
-            filename: `${contract.title.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, '')}.html`,
-            content: base64Content,
-          }]
-        }
-      } catch (e) {
-        console.warn('No se pudo descargar el HTML para adjuntar:', e)
-      }
-    }
+    const geoStr = signature?.geolocation?.lat
+      ? `${signature.geolocation.lat}, ${signature.geolocation.lng}${signature.geolocation.city ? ` (${signature.geolocation.city}, ${signature.geolocation.country})` : ''}`
+      : 'No disponible'
 
-    // Send email via Resend
+    // Send email via Resend — email limpio sin adjunto HTML
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -85,49 +73,103 @@ serve(async (req) => {
       body: JSON.stringify({
         from: 'Feria Effix <onboarding@resend.dev>',
         to: [contract.signer_email],
-        subject: `Copia firmada: ${contract.title}`,
+        subject: `Contrato firmado: ${contract.title}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1a1a2e;">Feria Effix - Contrato Firmado</h2>
-            <p>Hola <strong>${contract.signer_name}</strong>,</p>
-            <p>Tu contrato ha sido firmado exitosamente. A continuaci&oacute;n encontrar&aacute;s un resumen y el enlace para descargar tu copia.</p>
-
-            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #333; font-size: 16px;">${contract.title}</h3>
-              <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 6px 0; color: #6c757d;">Firmante:</td>
-                  <td style="padding: 6px 0; font-weight: bold;">${contract.signer_name}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #6c757d;">Fecha de firma:</td>
-                  <td style="padding: 6px 0;">${signedDate}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #6c757d;">IP registrada:</td>
-                  <td style="padding: 6px 0; font-family: monospace;">${signature?.ip_address || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #6c757d;">Hash del documento:</td>
-                  <td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${signature?.document_hash || 'N/A'}</td>
-                </tr>
-              </table>
+            <div style="text-align: center; padding: 24px 0; border-bottom: 2px solid #1a1a2e;">
+              <h1 style="color: #1a1a2e; font-size: 22px; margin: 0;">Feria Effix</h1>
+              <p style="color: #6c757d; font-size: 13px; margin: 4px 0 0 0;">Sistema de Contratos Electr&oacute;nicos</p>
             </div>
 
-            <p style="color: #666; font-size: 14px;">
-              ${attachments.length > 0
-                ? 'Encontrar&aacute; adjunto el documento firmado con el certificado de firma electr&oacute;nica completo (IP, dispositivo, geolocalizaci&oacute;n, hashes SHA-256 y consentimiento). Abra el archivo HTML en su navegador e imprima como PDF para conservarlo.'
-                : 'El documento incluye un certificado de firma electr&oacute;nica con todos los datos de verificaci&oacute;n (IP, dispositivo, geolocalizaci&oacute;n, hashes SHA-256 y consentimiento).'}
-            </p>
+            <div style="padding: 24px 0;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; background: #dcfce7; border-radius: 50%; padding: 12px; margin-bottom: 12px;">
+                  <span style="font-size: 28px;">&#10003;</span>
+                </div>
+                <h2 style="color: #16a34a; font-size: 20px; margin: 0;">Contrato Firmado Exitosamente</h2>
+              </div>
 
-            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-            <p style="color: #999; font-size: 12px;">
-              Esta firma electr&oacute;nica es v&aacute;lida conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012 de Colombia.
-              Conserve este correo como comprobante de su firma.
+              <p>Hola <strong>${contract.signer_name}</strong>,</p>
+              <p>Tu contrato ha sido firmado y registrado correctamente. A continuaci&oacute;n encontrar&aacute;s el resumen completo de la firma.</p>
+
+              <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1a1a2e; font-size: 16px; border-bottom: 1px solid #dee2e6; padding-bottom: 12px;">${contract.title}</h3>
+                <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #6c757d; width: 140px;">Firmante:</td>
+                    <td style="padding: 8px 0; font-weight: bold;">${contract.signer_name}</td>
+                  </tr>
+                  ${contract.signer_document_id ? `<tr>
+                    <td style="padding: 8px 0; color: #6c757d;">Documento:</td>
+                    <td style="padding: 8px 0;">${contract.signer_document_id}</td>
+                  </tr>` : ''}
+                  ${contract.signer_company ? `<tr>
+                    <td style="padding: 8px 0; color: #6c757d;">Empresa:</td>
+                    <td style="padding: 8px 0;">${contract.signer_company}</td>
+                  </tr>` : ''}
+                  <tr>
+                    <td style="padding: 8px 0; color: #6c757d;">Email:</td>
+                    <td style="padding: 8px 0;">${contract.signer_email}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6c757d;">Fecha de firma:</td>
+                    <td style="padding: 8px 0; font-weight: bold;">${signedDate}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #1a1a2e; font-size: 14px;">Certificado de Firma Electr&oacute;nica</h4>
+                <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 6px 0; color: #6c757d; width: 140px;">Direcci&oacute;n IP:</td>
+                    <td style="padding: 6px 0; font-family: monospace;">${signature?.ip_address || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #6c757d;">Dispositivo:</td>
+                    <td style="padding: 6px 0;">${deviceStr}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #6c757d;">Pantalla:</td>
+                    <td style="padding: 6px 0;">${signature?.device_info?.screen || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #6c757d;">Geolocalizaci&oacute;n:</td>
+                    <td style="padding: 6px 0;">${geoStr}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #6c757d;">Tipo de firma:</td>
+                    <td style="padding: 6px 0;">${signature?.signature_type === 'drawn' ? 'Firma dibujada' : 'Nombre tipado'}</td>
+                  </tr>
+                </table>
+
+                <div style="margin-top: 16px; padding: 12px; background: #f1f3f5; border-radius: 4px;">
+                  <p style="font-size: 11px; color: #6c757d; margin: 0 0 4px 0;">Hash del documento (SHA-256):</p>
+                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.document_hash || 'N/A'}</code>
+                </div>
+                <div style="margin-top: 8px; padding: 12px; background: #f1f3f5; border-radius: 4px;">
+                  <p style="font-size: 11px; color: #6c757d; margin: 0 0 4px 0;">Hash de la firma (SHA-256):</p>
+                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.signature_hash || 'N/A'}</code>
+                </div>
+              </div>
+
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0 0 4px 0; font-size: 13px; color: #1e40af;">
+                  <strong>Conserve este correo como comprobante legal de su firma.</strong>
+                </p>
+                <p style="margin: 0; font-size: 12px; color: #3b82f6;">
+                  Este email contiene toda la informaci&oacute;n necesaria para verificar la autenticidad de su firma.
+                </p>
+              </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="color: #999; font-size: 11px; text-align: center;">
+              Firma electr&oacute;nica v&aacute;lida conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012 de Colombia.<br/>
+              Documento generado por el Sistema de Contratos - Feria Effix.
             </p>
           </div>
         `,
-        ...(attachments.length > 0 ? { attachments } : {}),
       }),
     })
 
@@ -148,7 +190,7 @@ serve(async (req) => {
       metadata: {
         type: 'signed_copy',
         email_provider: 'resend',
-        subject: `Copia firmada: ${contract.title}`,
+        subject: `Contrato firmado: ${contract.title}`,
       },
     })
 
