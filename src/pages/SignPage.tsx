@@ -27,7 +27,10 @@ export function SignPage() {
   const [signing, setSigning] = useState(false)
   const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null)
   const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(null)
+  const [idDocumentBackFile, setIdDocumentBackFile] = useState<File | null>(null)
+  const [idDocumentBackPreview, setIdDocumentBackPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputBackRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!token) return
@@ -86,6 +89,32 @@ export function SignPage() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  const handleIdDocumentBackSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes (JPG, PNG, etc.)')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 10MB')
+      return
+    }
+
+    setIdDocumentBackFile(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setIdDocumentBackPreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  const removeIdDocumentBack = () => {
+    setIdDocumentBackFile(null)
+    setIdDocumentBackPreview(null)
+    if (fileInputBackRef.current) fileInputBackRef.current.value = ''
+  }
+
   const handleSign = async () => {
     if (!contract || !signatureData || !signatureData.value || !consentAccepted) {
       toast.error('Complete todos los campos requeridos')
@@ -106,9 +135,10 @@ export function SignPage() {
 
       let signatureImageUrl: string | null = null
       let idDocumentImageUrl: string | null = null
+      let idDocumentBackImageUrl: string | null = null
 
-      // Subir foto del documento de identidad
-      const idFilePath = `${contract.id}/id-${Date.now()}.${idDocumentFile.name.split('.').pop()}`
+      // Subir foto frontal del documento de identidad
+      const idFilePath = `${contract.id}/id-front-${Date.now()}.${idDocumentFile.name.split('.').pop()}`
       const { data: idUpload, error: idUploadError } = await supabase.storage
         .from('signatures')
         .upload(idFilePath, idDocumentFile, { contentType: idDocumentFile.type })
@@ -120,6 +150,23 @@ export function SignPage() {
           .from('signatures')
           .getPublicUrl(idUpload.path)
         idDocumentImageUrl = idUrlData.publicUrl
+      }
+
+      // Subir foto posterior del documento (opcional)
+      if (idDocumentBackFile) {
+        const idBackPath = `${contract.id}/id-back-${Date.now()}.${idDocumentBackFile.name.split('.').pop()}`
+        const { data: idBackUpload, error: idBackError } = await supabase.storage
+          .from('signatures')
+          .upload(idBackPath, idDocumentBackFile, { contentType: idDocumentBackFile.type })
+
+        if (idBackError) {
+          console.warn('No se pudo subir la foto posterior:', idBackError.message)
+        } else {
+          const { data: idBackUrlData } = supabase.storage
+            .from('signatures')
+            .getPublicUrl(idBackUpload.path)
+          idDocumentBackImageUrl = idBackUrlData.publicUrl
+        }
       }
 
       // Subir imagen de firma dibujada al storage
@@ -162,6 +209,7 @@ export function SignPage() {
         p_device_info: metadata.device_info,
         p_consent_text: CONSENT_TEXT,
         p_id_document_image_url: idDocumentImageUrl,
+        p_id_document_back_image_url: idDocumentBackImageUrl,
       })
 
       if (signError) {
@@ -276,6 +324,53 @@ export function SignPage() {
               accept="image/*"
               capture="environment"
               onChange={handleIdDocumentSelect}
+              className="hidden"
+            />
+          </div>
+
+          {/* Foto posterior del documento (opcional) */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Parte posterior del documento <span className="text-[hsl(var(--muted-foreground))] font-normal">(opcional)</span>
+            </label>
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              Si su documento tiene información en el reverso, suba una foto de la parte posterior.
+            </p>
+
+            {idDocumentBackPreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={idDocumentBackPreview}
+                  alt="Documento de identidad (posterior)"
+                  className="max-h-48 rounded-lg border shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={removeIdDocumentBack}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputBackRef.current?.click()}
+                className="border-2 border-dashed border-[hsl(var(--border))] rounded-lg p-6 text-center cursor-pointer hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--secondary))] transition-colors"
+              >
+                <div className="flex flex-col items-center gap-2 text-[hsl(var(--muted-foreground))]">
+                  <ImageIcon size={20} />
+                  <p className="text-sm">Foto del reverso</p>
+                  <p className="text-xs">JPG, PNG — máximo 10MB</p>
+                </div>
+              </div>
+            )}
+
+            <input
+              ref={fileInputBackRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleIdDocumentBackSelect}
               className="hidden"
             />
           </div>
