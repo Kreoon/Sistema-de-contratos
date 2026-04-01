@@ -322,24 +322,8 @@ export function ContractNew() {
       return
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('audit_trail').insert({
-      contract_id: data.id,
-      action: 'created',
-      actor_type: 'admin',
-      actor_email: user?.email,
-    })
-
+    // Enviar email primero si se solicitó
     if (andSend) {
-      await supabase.from('audit_trail').insert({
-        contract_id: data.id,
-        action: 'sent',
-        actor_type: 'admin',
-        actor_email: user?.email,
-        metadata: { signer_email: signerEmail },
-      })
-
-      // Enviar email con el link de firma
       await supabase.functions.invoke('send-contract', {
         body: {
           contractId: data.id,
@@ -348,6 +332,24 @@ export function ContractNew() {
           signingUrl: `${window.location.origin}/sign/${data.signing_token}`,
           contractTitle: title,
         },
+      })
+    }
+
+    // Audit trail (no bloquear si falla)
+    const { data: { user } } = await supabase.auth.getUser()
+    supabase.from('audit_trail').insert({
+      contract_id: data.id,
+      action: 'created',
+      actor_type: 'admin',
+      actor_email: user?.email,
+    })
+    if (andSend) {
+      supabase.from('audit_trail').insert({
+        contract_id: data.id,
+        action: 'sent',
+        actor_type: 'admin',
+        actor_email: user?.email,
+        metadata: { signer_email: signerEmail },
       })
     }
 
