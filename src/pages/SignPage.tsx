@@ -219,12 +219,13 @@ export function SignPage() {
       }
 
       toast.success('Contrato firmado exitosamente')
-      navigate(`/sign/${token}/complete`)
 
-      // Fire-and-forget: generar PDF con certificado (el servidor envía la copia por email automáticamente)
+      // Generar PDF con certificado (el servidor envía la copia por email automáticamente)
       supabase.functions.invoke('generate-pdf', {
         body: { contractId: contract.id },
       })
+
+      navigate(`/sign/${token}/complete`)
     } catch (err) {
       toast.error('Error inesperado al firmar')
       console.error(err)
