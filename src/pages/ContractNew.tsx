@@ -231,6 +231,8 @@ export function ContractNew() {
     'persona_encargada', 'email_encargada', 'celular_encargada',
     // Evento (va en la primera sección)
     'anio',
+    // Patrocinio (va en sección contacto)
+    'tipo_patrocinio',
   ]
 
   const visibleVariables = selectedTemplate?.variables.filter(v => {
@@ -613,6 +615,22 @@ export function ContractNew() {
                           </div>
                         </div>
                       </>
+                    )}
+
+                    {/* 2.5 Tipo de patrocinio (solo para template de patrocinio) */}
+                    {formData.tipo_persona && selectedTemplate?.variables.some(v => v.key === 'tipo_patrocinio') && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Tipo de patrocinio *</Label>
+                        <Select value={formData.tipo_patrocinio || ''} onChange={e => handleFieldChange('tipo_patrocinio', e.target.value)}>
+                          <option value="">Seleccionar...</option>
+                          <option value="Patrocinio Black">Patrocinio Black</option>
+                          <option value="Patrocinio Diamante">Patrocinio Diamante</option>
+                          <option value="Patrocinio Platino">Patrocinio Platino</option>
+                          <option value="Patrocinio Oro">Patrocinio Oro</option>
+                          <option value="Patrocinio Plata">Patrocinio Plata</option>
+                          <option value="Patrocinio Bronce">Patrocinio Bronce</option>
+                        </Select>
+                      </div>
                     )}
 
                     {/* 3. Datos de contacto (solo después de seleccionar tipo persona) */}
