@@ -129,6 +129,14 @@ serve(async (req) => {
             </tr>
           </table>
 
+          ${signature?.id_document_image_url ? `
+          <div style="margin: 20px 0; padding: 16px; border: 1px solid #dee2e6; border-radius: 4px; background: white;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 8px; text-align: center;">DOCUMENTO DE IDENTIDAD</div>
+            <div style="text-align: center;">
+              <img src="${signature.id_document_image_url}" style="max-height: 200px; max-width: 100%; border-radius: 4px;" alt="Documento de identidad" />
+            </div>
+          </div>` : ''}
+
           ${signatureHtml ? `
           <div style="margin: 20px 0; padding: 16px; border: 1px dashed #dee2e6; border-radius: 4px; text-align: center; background: white;">
             <div style="font-size: 11px; color: #6c757d; margin-bottom: 8px;">FIRMA</div>
@@ -209,6 +217,17 @@ serve(async (req) => {
       actor_type: 'system',
       metadata: { file_path: filePath, format: 'html', has_certificate: true },
     })
+
+    // Enviar copia firmada por email desde el servidor
+    const functionUrl = `${supabaseUrl}/functions/v1/send-signed-copy`
+    fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ contractId }),
+    }).catch((err) => console.error('Error invocando send-signed-copy:', err))
 
     return new Response(
       JSON.stringify({ success: true, url: urlData.publicUrl }),

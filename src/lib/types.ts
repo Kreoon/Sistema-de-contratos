@@ -51,6 +51,7 @@ export interface Signature {
   signature_type: 'drawn' | 'typed'
   signature_image_url: string | null
   typed_name: string | null
+  id_document_image_url: string | null
   document_hash: string
   signature_hash: string
   ip_address: string
