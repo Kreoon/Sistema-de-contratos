@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, Copy, Send, Download, Clock, ExternalLink, Mail, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Copy, Send, Download, Clock, ExternalLink, Mail, RefreshCw, Shield } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -264,40 +264,143 @@ export function ContractDetail() {
             moneda={(contract.contract_data?.moneda as string) || 'COP'}
           />
 
-          {/* Firma capturada */}
+          {/* Certificado de firma completo */}
           {signature && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Firma Capturada</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Shield size={16} /> Certificado de Firma
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div>
-                  <span className="text-[hsl(var(--muted-foreground))]">Tipo: </span>
-                  {signature.signature_type === 'drawn' ? 'Dibujada' : 'Tipada'}
-                </div>
-                <div>
-                  <span className="text-[hsl(var(--muted-foreground))]">IP: </span>
-                  {signature.ip_address}
-                </div>
-                <div>
-                  <span className="text-[hsl(var(--muted-foreground))]">Navegador: </span>
-                  {signature.device_info?.browser} / {signature.device_info?.os}
-                </div>
-                <div>
-                  <span className="text-[hsl(var(--muted-foreground))]">Hash documento: </span>
-                  <code className="text-xs">{signature.document_hash?.slice(0, 16)}...</code>
-                </div>
-                <div>
-                  <span className="text-[hsl(var(--muted-foreground))]">Firmado: </span>
-                  {new Date(signature.consent_accepted_at).toLocaleString('es-CO')}
-                </div>
+              <CardContent className="space-y-4 text-sm">
+                {/* Firma visual */}
                 {signature.signature_image_url && (
-                  <img
-                    src={signature.signature_image_url}
-                    alt="Firma del contrato"
-                    className="border rounded mt-2 max-h-24"
-                  />
+                  <div className="border rounded-lg p-4 bg-white text-center">
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">Firma electrónica</p>
+                    <img
+                      src={signature.signature_image_url}
+                      alt="Firma del contrato"
+                      className="mx-auto max-h-20"
+                    />
+                  </div>
                 )}
+                {signature.signature_type === 'typed' && signature.typed_name && (
+                  <div className="border rounded-lg p-4 bg-white text-center">
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">Firma tipada</p>
+                    <p className="text-2xl italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>
+                      {signature.typed_name}
+                    </p>
+                  </div>
+                )}
+
+                {/* Datos de la firma */}
+                <div className="grid grid-cols-2 gap-3 bg-[hsl(var(--secondary))] rounded-lg p-4">
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Tipo de firma</p>
+                    <p className="font-medium">{signature.signature_type === 'drawn' ? 'Dibujada' : 'Tipada'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Fecha y hora</p>
+                    <p className="font-medium">{new Date(signature.consent_accepted_at).toLocaleString('es-CO')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Dirección IP</p>
+                    <p className="font-medium font-mono">{signature.ip_address}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">User Agent</p>
+                    <p className="font-medium text-xs break-all">{signature.user_agent?.slice(0, 80)}...</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Navegador</p>
+                    <p className="font-medium">{signature.device_info?.browser || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Sistema operativo</p>
+                    <p className="font-medium">{signature.device_info?.os || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Dispositivo</p>
+                    <p className="font-medium">{signature.device_info?.device_type || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Pantalla</p>
+                    <p className="font-medium">{signature.device_info?.screen || 'N/A'}</p>
+                  </div>
+                  {signature.geolocation?.lat && (
+                    <>
+                      <div>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))]">Geolocalización</p>
+                        <p className="font-medium font-mono text-xs">
+                          {signature.geolocation.lat}, {signature.geolocation.lng}
+                        </p>
+                      </div>
+                      {signature.geolocation.city && (
+                        <div>
+                          <p className="text-xs text-[hsl(var(--muted-foreground))]">Ciudad</p>
+                          <p className="font-medium">{signature.geolocation.city}, {signature.geolocation.country}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Documento de identidad */}
+                {(signature.id_document_image_url || signature.id_document_back_image_url) && (
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">Documento de identidad</p>
+                    <div className="flex flex-wrap gap-3">
+                      {signature.id_document_image_url && (
+                        <div className="border rounded-lg overflow-hidden">
+                          <p className="text-xs text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--secondary))] py-1">Frontal</p>
+                          <a href={signature.id_document_image_url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={signature.id_document_image_url}
+                              alt="Documento frontal"
+                              className="max-h-40 cursor-pointer hover:opacity-90"
+                            />
+                          </a>
+                        </div>
+                      )}
+                      {signature.id_document_back_image_url && (
+                        <div className="border rounded-lg overflow-hidden">
+                          <p className="text-xs text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--secondary))] py-1">Posterior</p>
+                          <a href={signature.id_document_back_image_url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={signature.id_document_back_image_url}
+                              alt="Documento posterior"
+                              className="max-h-40 cursor-pointer hover:opacity-90"
+                            />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hashes */}
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Hash del documento (SHA-256)</p>
+                    <code className="block text-xs bg-[hsl(var(--secondary))] p-2 rounded break-all font-mono">
+                      {signature.document_hash}
+                    </code>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Hash de la firma (SHA-256)</p>
+                    <code className="block text-xs bg-[hsl(var(--secondary))] p-2 rounded break-all font-mono">
+                      {signature.signature_hash}
+                    </code>
+                  </div>
+                </div>
+
+                {/* Consentimiento */}
+                <div className="border-t pt-3">
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] mb-1">Consentimiento otorgado</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] italic">
+                    {signature.consent_text}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}
