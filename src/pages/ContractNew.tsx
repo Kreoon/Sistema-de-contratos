@@ -338,6 +338,17 @@ export function ContractNew() {
         actor_email: user?.email,
         metadata: { signer_email: signerEmail },
       })
+
+      // Enviar email con el link de firma
+      await supabase.functions.invoke('send-contract', {
+        body: {
+          contractId: data.id,
+          signerEmail,
+          signerName,
+          signingUrl: `${window.location.origin}/sign/${data.signing_token}`,
+          contractTitle: title,
+        },
+      })
     }
 
     // 4. Guardar cuotas de pago
