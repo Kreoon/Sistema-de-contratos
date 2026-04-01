@@ -56,6 +56,25 @@ serve(async (req) => {
 
     const downloadUrl = contract.signed_pdf_url || ''
 
+    // Descargar el HTML firmado para adjuntarlo al email
+    let attachments: Array<{ filename: string; content: string }> = []
+    if (downloadUrl) {
+      try {
+        const htmlRes = await fetch(downloadUrl)
+        if (htmlRes.ok) {
+          const htmlContent = await htmlRes.text()
+          // Convertir a base64 para adjuntar en Resend
+          const base64Content = btoa(unescape(encodeURIComponent(htmlContent)))
+          attachments = [{
+            filename: `${contract.title.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, '')}.html`,
+            content: base64Content,
+          }]
+        }
+      } catch (e) {
+        console.warn('No se pudo descargar el HTML para adjuntar:', e)
+      }
+    }
+
     // Send email via Resend
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -95,16 +114,10 @@ serve(async (req) => {
               </table>
             </div>
 
-            ${downloadUrl ? `
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${downloadUrl}" style="background-color: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Descargar Contrato Firmado
-              </a>
-            </div>` : ''}
-
             <p style="color: #666; font-size: 14px;">
-              El documento incluye un certificado de firma electr&oacute;nica con todos los datos de verificaci&oacute;n
-              (IP, dispositivo, geolocalizaci&oacute;n, hashes SHA-256 y consentimiento).
+              ${attachments.length > 0
+                ? 'Encontrar&aacute; adjunto el documento firmado con el certificado de firma electr&oacute;nica completo (IP, dispositivo, geolocalizaci&oacute;n, hashes SHA-256 y consentimiento). Abra el archivo HTML en su navegador e imprima como PDF para conservarlo.'
+                : 'El documento incluye un certificado de firma electr&oacute;nica con todos los datos de verificaci&oacute;n (IP, dispositivo, geolocalizaci&oacute;n, hashes SHA-256 y consentimiento).'}
             </p>
 
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
@@ -114,6 +127,7 @@ serve(async (req) => {
             </p>
           </div>
         `,
+        ...(attachments.length > 0 ? { attachments } : {}),
       }),
     })
 

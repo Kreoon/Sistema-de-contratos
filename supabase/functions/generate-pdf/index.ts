@@ -196,10 +196,12 @@ serve(async (req) => {
 
     // Upload to Storage
     const filePath = `signed/${contractId}.html`
+    const encoder = new TextEncoder()
+    const htmlBytes = encoder.encode(fullHtml)
     const { error: uploadError } = await supabase.storage
       .from('contracts-pdf')
-      .upload(filePath, new Blob([fullHtml], { type: 'text/html' }), {
-        contentType: 'text/html',
+      .upload(filePath, htmlBytes, {
+        contentType: 'text/html; charset=utf-8',
         upsert: true,
       })
 

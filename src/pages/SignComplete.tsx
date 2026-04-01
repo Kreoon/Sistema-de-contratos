@@ -88,12 +88,26 @@ export function SignComplete() {
                 Preparando documento...
               </Button>
             ) : signedPdfUrl ? (
-              <a href={signedPdfUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="lg">
-                  <Download size={16} className="mr-2" />
-                  Descargar Contrato Firmado
-                </Button>
-              </a>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(signedPdfUrl)
+                    const html = await res.text()
+                    const win = window.open('', '_blank')
+                    if (win) {
+                      win.document.write(html)
+                      win.document.close()
+                    }
+                  } catch {
+                    window.open(signedPdfUrl, '_blank')
+                  }
+                }}
+              >
+                <Download size={16} className="mr-2" />
+                Ver Contrato Firmado
+              </Button>
             ) : null}
           </div>
         </CardContent>
