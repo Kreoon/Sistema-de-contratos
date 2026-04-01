@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, Copy, Send, Download, Clock, ExternalLink, Mail, RefreshCw, Shield } from 'lucide-react'
+import { ArrowLeft, Copy, Download, Clock, ExternalLink, Mail, RefreshCw, Shield } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -50,32 +50,6 @@ export function ContractDetail() {
     toast.success('Link copiado al portapapeles')
   }
 
-  const markAsSent = async () => {
-    if (!contract) return
-    const { error } = await supabase
-      .from('contracts')
-      .update({ status: 'sent', sent_at: new Date().toISOString() })
-      .eq('id', contract.id)
-
-    if (!error) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      await supabase.from('audit_trail').insert({
-        contract_id: contract.id,
-        action: 'sent',
-        actor_type: 'admin',
-        actor_email: user?.email,
-        metadata: { signer_email: contract.signer_email },
-      })
-      setContract(prev =>
-        prev
-          ? { ...prev, status: 'sent' as ContractStatus, sent_at: new Date().toISOString() }
-          : null
-      )
-      toast.success('Contrato marcado como enviado')
-    }
-  }
 
   const actionLabels: Record<string, string> = {
     created: 'Contrato creado',
