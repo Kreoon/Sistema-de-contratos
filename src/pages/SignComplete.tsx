@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { Signature } from '@/lib/types'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
 export function SignComplete() {
   const { token } = useParams<{ token: string }>()
@@ -12,6 +14,70 @@ export function SignComplete() {
   const [contractTitle, setContractTitle] = useState('')
   const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null)
   const [checkingPdf, setCheckingPdf] = useState(true)
+  const [downloading, setDownloading] = useState(false)
+
+  const downloadPdf = async () => {
+    if (!signedPdfUrl || !contractTitle) return
+    setDownloading(true)
+
+    try {
+      const res = await fetch(signedPdfUrl)
+      const htmlText = await res.text()
+
+      // Crear contenedor oculto para renderizar el HTML
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.left = '-9999px'
+      container.style.top = '0'
+      container.style.width = '794px' // Ancho carta en px a 96dpi
+      container.style.background = 'white'
+      container.innerHTML = htmlText.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<head>[\s\S]*?<\/head>|<\/?body[^>]*>/gi, '')
+      document.body.appendChild(container)
+
+      // Esperar a que las imágenes carguen
+      const images = container.querySelectorAll('img')
+      await Promise.all(Array.from(images).map(img =>
+        img.complete ? Promise.resolve() : new Promise(resolve => {
+          img.onload = resolve
+          img.onerror = resolve
+        })
+      ))
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      })
+
+      document.body.removeChild(container)
+
+      const imgWidth = 216 // Letter width in mm
+      const pageHeight = 279 // Letter height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      const pdf = new jsPDF('p', 'mm', 'letter')
+      let position = 0
+
+      // Multi-página si el contenido es largo
+      while (position < imgHeight) {
+        if (position > 0) pdf.addPage()
+        pdf.addImage(
+          canvas.toDataURL('image/jpeg', 0.95),
+          'JPEG', 0, -position, imgWidth, imgHeight
+        )
+        position += pageHeight
+      }
+
+      pdf.save(`${contractTitle.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, '')}.pdf`)
+    } catch (err) {
+      console.error('Error generando PDF:', err)
+      // Fallback: abrir en nueva pestaña
+      window.open(signedPdfUrl, '_blank')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   useEffect(() => {
     if (!token) return
@@ -91,22 +157,14 @@ export function SignComplete() {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={async () => {
-                  try {
-                    const res = await fetch(signedPdfUrl)
-                    const html = await res.text()
-                    const win = window.open('', '_blank')
-                    if (win) {
-                      win.document.write(html)
-                      win.document.close()
-                    }
-                  } catch {
-                    window.open(signedPdfUrl, '_blank')
-                  }
-                }}
+                onClick={downloadPdf}
+                disabled={downloading}
               >
-                <Download size={16} className="mr-2" />
-                Ver Contrato Firmado
+                {downloading ? (
+                  <><Loader2 className="animate-spin mr-2" size={16} /> Generando PDF...</>
+                ) : (
+                  <><Download size={16} className="mr-2" /> Descargar Contrato Firmado</>
+                )}
               </Button>
             ) : null}
           </div>
