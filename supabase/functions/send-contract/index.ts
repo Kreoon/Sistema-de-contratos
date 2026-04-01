@@ -30,7 +30,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Feria Effix <contratos@effix.co>',
+        from: 'Feria Effix <onboarding@resend.dev>',
         to: [signerEmail],
         subject: `Contrato pendiente de firma: ${contractTitle}`,
         html: `

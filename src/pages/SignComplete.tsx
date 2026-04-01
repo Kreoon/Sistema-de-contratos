@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CheckCircle, Shield, Clock, Globe } from 'lucide-react'
+import { CheckCircle, Shield, Clock, Globe, Download, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import type { Signature } from '@/lib/types'
 
 export function SignComplete() {
   const { token } = useParams<{ token: string }>()
   const [signature, setSignature] = useState<Signature | null>(null)
   const [contractTitle, setContractTitle] = useState('')
+  const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null)
+  const [checkingPdf, setCheckingPdf] = useState(true)
 
   useEffect(() => {
     if (!token) return
@@ -16,12 +19,13 @@ export function SignComplete() {
     async function load() {
       const { data: contractData } = await supabase
         .from('contracts')
-        .select('id, title')
+        .select('id, title, signed_pdf_url')
         .eq('signing_token', token)
         .single()
 
       if (contractData) {
         setContractTitle(contractData.title)
+        setSignedPdfUrl(contractData.signed_pdf_url)
 
         const { data: sig } = await supabase
           .from('signatures')
@@ -32,6 +36,34 @@ export function SignComplete() {
           .single()
 
         if (sig) setSignature(sig as Signature)
+
+        // If PDF not ready yet, poll every 3 seconds (max 30 seconds)
+        if (!contractData.signed_pdf_url) {
+          let attempts = 0
+          const interval = setInterval(async () => {
+            attempts++
+            const { data: updated } = await supabase
+              .from('contracts')
+              .select('signed_pdf_url')
+              .eq('id', contractData.id)
+              .single()
+
+            if (updated?.signed_pdf_url) {
+              setSignedPdfUrl(updated.signed_pdf_url)
+              setCheckingPdf(false)
+              clearInterval(interval)
+            } else if (attempts >= 10) {
+              setCheckingPdf(false)
+              clearInterval(interval)
+            }
+          }, 3000)
+
+          return () => clearInterval(interval)
+        } else {
+          setCheckingPdf(false)
+        }
+      } else {
+        setCheckingPdf(false)
       }
     }
 
@@ -48,6 +80,22 @@ export function SignComplete() {
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-2">
             Recibirá una copia del contrato firmado en su correo electrónico.
           </p>
+
+          <div className="mt-6">
+            {checkingPdf ? (
+              <Button disabled variant="outline" size="lg">
+                <Loader2 className="animate-spin mr-2" size={16} />
+                Preparando documento...
+              </Button>
+            ) : signedPdfUrl ? (
+              <a href={signedPdfUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="lg">
+                  <Download size={16} className="mr-2" />
+                  Descargar Contrato Firmado
+                </Button>
+              </a>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
 

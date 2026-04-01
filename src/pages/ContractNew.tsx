@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, UserPlus, UserCheck, X, Plus, Trash2 } from 'lucide-react'
+import { Search, UserPlus, UserCheck, X } from 'lucide-react'
 import { useTemplates } from '@/hooks/useTemplates'
 import { supabase } from '@/lib/supabase'
 import { renderTemplate } from '@/lib/template-engine'
