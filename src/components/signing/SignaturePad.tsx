@@ -23,7 +23,7 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
   const handleEnd = () => {
     if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
       setHasDrawn(true)
-      const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png')
+      const dataUrl = sigPadRef.current.getCanvas().toDataURL('image/png')
       onSignature({ type: 'drawn', value: dataUrl })
     }
   }

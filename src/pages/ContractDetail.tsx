@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
 import { PaymentSchedule } from '@/components/contracts/PaymentSchedule'
 import type { Contract, AuditEntry, Signature, ContractStatus } from '@/lib/types'
+import { injectContractBranding } from '@/lib/template-engine'
 
 export function ContractDetail() {
   const { id } = useParams<{ id: string }>()
@@ -88,6 +89,30 @@ export function ContractDetail() {
       toast.error('Error enviando email')
     } finally {
       setSendingEmail(false)
+    }
+  }
+
+  const generatePdf = async () => {
+    if (!contract) return
+    setRegeneratingPdf(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { contractId: contract.id },
+      })
+      if (error) throw error
+      // Recargar contrato para obtener signed_pdf_url
+      const { data: updated } = await supabase
+        .from('contracts')
+        .select('*, template:contract_templates(name)')
+        .eq('id', contract.id)
+        .single()
+      if (updated) setContract(updated as Contract)
+      toast.success('PDF generado correctamente')
+      if (data?.url) window.open(data.url, '_blank')
+    } catch {
+      toast.error('Error generando PDF')
+    } finally {
+      setRegeneratingPdf(false)
     }
   }
 
@@ -415,20 +440,28 @@ export function ContractDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Contrato</CardTitle>
-                {contract.signed_pdf_url && (
+                {contract.signed_pdf_url ? (
                   <a href={contract.signed_pdf_url} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                       <Download size={14} className="mr-1" />
                       Descargar PDF
                     </Button>
                   </a>
-                )}
+                ) : ['signed', 'completed'].includes(contract.status) ? (
+                  <Button variant="outline" size="sm" onClick={generatePdf} disabled={regeneratingPdf}>
+                    {regeneratingPdf ? (
+                      <><RefreshCw size={14} className="mr-1 animate-spin" /> Generando PDF...</>
+                    ) : (
+                      <><Download size={14} className="mr-1" /> Generar PDF</>
+                    )}
+                  </Button>
+                ) : null}
               </div>
             </CardHeader>
             <CardContent>
               <div
                 className="prose prose-sm max-w-none border rounded-md p-6 bg-white text-black overflow-auto max-h-[80vh]"
-                dangerouslySetInnerHTML={{ __html: contract.rendered_html || '' }}
+                dangerouslySetInnerHTML={{ __html: injectContractBranding(contract.rendered_html || '') }}
               />
             </CardContent>
           </Card>

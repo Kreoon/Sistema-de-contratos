@@ -54,6 +54,38 @@ export function renderTemplate(templateContent: string, data: Record<string, str
 }
 
 /**
+ * Inyecta la firma de Omar Stevenson Rivera en la sección del contratante/concedente
+ * para contratos cuyo rendered_html no la incluye aún.
+ */
+export function injectEmployerSignature(html: string): string {
+  const signatureImg = '<img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />'
+  // Si ya tiene la firma, no duplicar
+  if (html.includes('firma-omar-stevenson')) return html
+  // Inyectar antes del border-top div que contiene "EL CONTRATANTE" o "EL CONCEDENTE"
+  return html.replace(
+    /(<div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">\s*<p[^>]*>(?:EL CONTRATANTE|EL CONCEDENTE)<\/p>)/g,
+    `${signatureImg}\n      $1`
+  )
+}
+
+/**
+ * Inyecta encabezado y pie de página al contrato (vista previa web).
+ */
+export function injectHeaderFooter(html: string): string {
+  if (html.includes('contract-header-img')) return html
+  const header = '<div class="contract-header-img" style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #eee; padding-bottom: 16px;"><img src="/Encabezado.png" alt="Encabezado" style="width: 100%; max-width: 100%;" /></div>'
+  const footer = '<div style="text-align: center; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;"><img src="/Pie de pagina.png" alt="Pie de página" style="width: 100%; max-width: 100%;" /></div>'
+  return header + html + footer
+}
+
+/**
+ * Aplica todas las inyecciones al HTML del contrato (firma empleador + encabezado/pie).
+ */
+export function injectContractBranding(html: string): string {
+  return injectHeaderFooter(injectEmployerSignature(html))
+}
+
+/**
  * Extrae las variables usadas en un template (para validación)
  */
 export function extractVariables(templateContent: string): string[] {

@@ -101,6 +101,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
 
   <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
+      <img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONTRATANTE</p>
         <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
@@ -111,6 +112,9 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
       </div>
     </div>
     <div style="width: 45%;">
+      <div style="min-height: 72px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 4px;">
+        [Firma electrónica]
+      </div>
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONTRATISTA</p>
         {{#if empresa}}
@@ -123,9 +127,6 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
         <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
         {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
         {{/if}}
-        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
-          [Firma electrónica]
-        </div>
       </div>
     </div>
   </div>
@@ -395,6 +396,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
 
   <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
+      <img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCEDENTE</p>
         <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
@@ -405,6 +407,9 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
       </div>
     </div>
     <div style="width: 45%;">
+      <div style="min-height: 72px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 4px;">
+        [Firma electrónica]
+      </div>
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCESIONARIO</p>
         {{#if empresa}}
@@ -417,9 +422,6 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
         <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
         {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
         {{/if}}
-        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
-          [Firma electrónica]
-        </div>
       </div>
     </div>
   </div>
@@ -682,6 +684,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
 
   <div style="margin-top: 64px; display: flex; justify-content: space-between; gap: 40px;">
     <div style="width: 45%;">
+      <img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCEDENTE</p>
         <p style="margin: 0 0 4px 0;">{{org_nombre}}</p>
@@ -692,6 +695,9 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
       </div>
     </div>
     <div style="width: 45%;">
+      <div style="min-height: 72px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 4px;">
+        [Firma electrónica]
+      </div>
       <div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">
         <p style="margin: 0 0 4px 0; font-weight: bold;">EL CONCESIONARIO / PATROCINADOR</p>
         {{#if empresa}}
@@ -704,9 +710,6 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
         <p style="margin: 0 0 4px 0;">{{tipo_documento}} No. {{numero_documento}}</p>
         {{#if pais}}<p style="margin: 0 0 4px 0;">Nacionalidad: {{pais}}</p>{{/if}}
         {{/if}}
-        <div style="min-height: 72px; border: 1px dashed #aaa; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; font-style: italic;">
-          [Firma electrónica]
-        </div>
       </div>
     </div>
   </div>

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SignaturePad } from '@/components/signing/SignaturePad'
 import { SigningConsent, CONSENT_TEXT } from '@/components/signing/SigningConsent'
 import type { Contract } from '@/lib/types'
+import { injectContractBranding } from '@/lib/template-engine'
 
 interface SignatureState {
   type: 'drawn' | 'typed'
@@ -269,7 +270,7 @@ export function SignPage() {
         <CardContent>
           <div
             className="prose prose-sm max-w-none border rounded-md p-6 bg-white text-black overflow-auto max-h-[60vh]"
-            dangerouslySetInnerHTML={{ __html: contract.rendered_html ?? '' }}
+            dangerouslySetInnerHTML={{ __html: injectContractBranding(contract.rendered_html ?? '') }}
           />
         </CardContent>
       </Card>

@@ -56,6 +56,15 @@ serve(async (req) => {
       signatureHtml
     )
 
+    // Inject employer signature (Omar Stevenson Rivera) if not already present
+    if (!contractHtml.includes('firma-omar-stevenson')) {
+      const employerSigHtml = '<img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />'
+      contractHtml = contractHtml.replace(
+        /(<div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">\s*<p[^>]*>(?:EL CONTRATANTE|EL CONCEDENTE)<\/p>)/g,
+        `${employerSigHtml}\n      $1`
+      )
+    }
+
     // Format date for Colombia timezone
     const signedDate = signature
       ? new Date(signature.consent_accepted_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })
@@ -174,23 +183,55 @@ serve(async (req) => {
       </div>
     `
 
-    // Build full HTML document
+    // Build full HTML document with A4 pages, repeating header/footer
     const fullHtml = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <style>
-    @page { margin: 2cm; size: letter; }
-    body { font-family: Georgia, serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; }
+    @page {
+      size: A4;
+      margin: 100px 2cm 80px 2cm;
+    }
+    body {
+      font-family: Georgia, serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
     .contract { max-width: 100%; }
+    .page-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 0 2cm;
+    }
+    .page-header img { width: 100%; }
+    .page-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 0 2cm;
+    }
+    .page-footer img { width: 100%; }
+    .content { margin-top: 10px; }
     @media print {
       body { padding: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="contract">${contractHtml}</div>
-  ${certificateHtml}
+  <div class="page-header"><img src="/Encabezado.png" alt="Encabezado" /></div>
+  <div class="page-footer"><img src="/Pie de pagina.png" alt="Pie de página" /></div>
+  <div class="content">
+    <div class="contract">${contractHtml}</div>
+    ${certificateHtml}
+  </div>
 </body>
 </html>`
 
