@@ -122,11 +122,6 @@ export function SignPage() {
       return
     }
 
-    if (!idDocumentFile) {
-      toast.error('Debe adjuntar una foto de su documento de identidad')
-      return
-    }
-
     setSigning(true)
 
     try {
@@ -283,7 +278,7 @@ export function SignPage() {
           {/* Foto del documento de identidad */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Foto del documento de identidad <span className="text-red-500">*</span>
+              Foto del documento de identidad <span className="text-[hsl(var(--muted-foreground))] font-normal">(opcional)</span>
             </label>
             <p className="text-xs text-[hsl(var(--muted-foreground))]">
               Suba una foto clara de su documento de identidad (cédula, pasaporte, etc.) para verificar su identidad.
@@ -381,7 +376,7 @@ export function SignPage() {
           <SigningConsent accepted={consentAccepted} onAccept={setConsentAccepted} />
           <Button
             onClick={handleSign}
-            disabled={signing || !signatureData?.value || !consentAccepted || !idDocumentFile}
+            disabled={signing || !signatureData?.value || !consentAccepted}
             className="w-full"
             size="lg"
           >
