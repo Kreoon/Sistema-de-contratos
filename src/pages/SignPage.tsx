@@ -133,19 +133,21 @@ export function SignPage() {
       let idDocumentImageUrl: string | null = null
       let idDocumentBackImageUrl: string | null = null
 
-      // Subir foto frontal del documento de identidad
-      const idFilePath = `${contract.id}/id-front-${Date.now()}.${idDocumentFile.name.split('.').pop()}`
-      const { data: idUpload, error: idUploadError } = await supabase.storage
-        .from('signatures')
-        .upload(idFilePath, idDocumentFile, { contentType: idDocumentFile.type })
-
-      if (idUploadError) {
-        console.warn('No se pudo subir la foto del documento:', idUploadError.message)
-      } else {
-        const { data: idUrlData } = supabase.storage
+      // Subir foto frontal del documento de identidad (opcional)
+      if (idDocumentFile) {
+        const idFilePath = `${contract.id}/id-front-${Date.now()}.${idDocumentFile.name.split('.').pop()}`
+        const { data: idUpload, error: idUploadError } = await supabase.storage
           .from('signatures')
-          .getPublicUrl(idUpload.path)
-        idDocumentImageUrl = idUrlData.publicUrl
+          .upload(idFilePath, idDocumentFile, { contentType: idDocumentFile.type })
+
+        if (idUploadError) {
+          console.warn('No se pudo subir la foto del documento:', idUploadError.message)
+        } else {
+          const { data: idUrlData } = supabase.storage
+            .from('signatures')
+            .getPublicUrl(idUpload.path)
+          idDocumentImageUrl = idUrlData.publicUrl
+        }
       }
 
       // Subir foto posterior del documento (opcional)
