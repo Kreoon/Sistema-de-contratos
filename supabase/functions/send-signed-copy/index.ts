@@ -17,6 +17,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://sistema-de-contratos-two.vercel.app'
 
     if (!resendApiKey) {
       return new Response(
@@ -71,7 +72,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Feria Effix <onboarding@resend.dev>',
+        from: 'Feria Effix <noreply@contratos.feriaeffix.com>',
         to: [contract.signer_email],
         subject: `Contrato firmado: ${contract.title}`,
         html: `
@@ -151,6 +152,13 @@ serve(async (req) => {
                   <p style="font-size: 11px; color: #6c757d; margin: 0 0 4px 0;">Hash de la firma (SHA-256):</p>
                   <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.signature_hash || 'N/A'}</code>
                 </div>
+              </div>
+
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${siteUrl}/sign/${contract.signing_token}/complete"
+                   style="background-color: #1a1a2e; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 14px;">
+                  Ver Contrato Firmado
+                </a>
               </div>
 
               <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
