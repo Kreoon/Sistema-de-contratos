@@ -554,20 +554,19 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {{/if}}
   </table>
 
-  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">VALOR DEL PATROCINIO</h3>
+  <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 16px;">BENEFICIOS DEL PATROCINIO</h3>
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px;">
     <thead>
-      <tr style="background: #e5e7eb; color: #111;">
-        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Tipo de patrocinio</th>
-        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor total (IVA incluido)</th>
-        <th style="border: 1px solid #ccc; padding: 8px 12px; text-align: left;">Valor abono</th>
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 10px 12px; text-align: center; background: #e5e7eb; color: #111;">
+          <div style="font-weight: bold;">Beneficios {{tipo_patrocinio}}</div>
+          <div style="margin-top: 4px;">{{valor_patrocinio}}</div>
+        </th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td style="border: 1px solid #ccc; padding: 8px 12px;">{{tipo_patrocinio}}</td>
-        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_total}} {{moneda}}</strong></td>
-        <td style="border: 1px solid #ccc; padding: 8px 12px;"><strong>{{valor_abono}} {{moneda}}</strong></td>
+        <td style="border: 1px solid #ccc; padding: 12px; vertical-align: top; line-height: 1.7; white-space: pre-wrap;">{{beneficios_patrocinio}}</td>
       </tr>
     </tbody>
   </table>
@@ -739,8 +738,8 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {"key": "celular_encargada", "label": "Celular de la persona encargada", "type": "text", "required": false},
     {"key": "tipo_patrocinio", "label": "Tipo de patrocinio", "type": "select", "required": true, "options": ["Patrocinio Black", "Patrocinio Diamante", "Patrocinio Platino", "Patrocinio Oro", "Patrocinio Plata", "Patrocinio Bronce"]},
     {"key": "valor_total", "label": "Valor total (IVA incluido)", "type": "text", "required": true, "placeholder": "20.000.000"},
-    {"key": "valor_abono", "label": "Valor del abono", "type": "text", "required": true, "placeholder": "10.000.000"},
     {"key": "moneda", "label": "Moneda", "type": "select", "required": true, "options": ["COP", "USD", "EUR"]},
+    {"key": "beneficios_patrocinio", "label": "Beneficios del patrocinio", "type": "textarea", "required": true, "placeholder": "· Beneficio 1\n· Beneficio 2\n· Beneficio 3"},
     {"key": "anio", "label": "Año del evento", "type": "text", "required": true, "placeholder": "2026"}
   ]'::jsonb
 );
