@@ -987,6 +987,9 @@ export function ContractNew() {
                             <option value="Patrocinio Bronce">
                               Patrocinio Bronce
                             </option>
+                            <option value="Patrocinio Académico">
+                              Patrocinio Académico
+                            </option>
                           </Select>
                         </div>
                       )}

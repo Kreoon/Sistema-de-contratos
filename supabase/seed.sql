@@ -736,7 +736,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     {"key": "persona_encargada", "label": "Persona encargada (opcional)", "type": "text", "required": false},
     {"key": "email_encargada", "label": "Correo de la persona encargada", "type": "text", "required": false},
     {"key": "celular_encargada", "label": "Celular de la persona encargada", "type": "text", "required": false},
-    {"key": "tipo_patrocinio", "label": "Tipo de patrocinio", "type": "select", "required": true, "options": ["Patrocinio Black", "Patrocinio Diamante", "Patrocinio Platino", "Patrocinio Oro", "Patrocinio Plata", "Patrocinio Bronce"]},
+    {"key": "tipo_patrocinio", "label": "Tipo de patrocinio", "type": "select", "required": true, "options": ["Patrocinio Black", "Patrocinio Diamante", "Patrocinio Platino", "Patrocinio Oro", "Patrocinio Plata", "Patrocinio Bronce", "Patrocinio Académico"]},
     {"key": "valor_total", "label": "Valor total (IVA incluido)", "type": "text", "required": true, "placeholder": "20.000.000"},
     {"key": "moneda", "label": "Moneda", "type": "select", "required": true, "options": ["COP", "USD", "EUR"]},
     {"key": "beneficios_patrocinio", "label": "Beneficios del patrocinio", "type": "textarea", "required": true, "placeholder": "· Beneficio 1\n· Beneficio 2\n· Beneficio 3"},
