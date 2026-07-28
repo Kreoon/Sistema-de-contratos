@@ -435,7 +435,7 @@ export function ContractDetail() {
                       Dirección IP
                     </p>
                     <p className="font-medium font-mono">
-                      {signature.ip_address}
+                      {signature.ip_address ?? "No disponible"}
                     </p>
                   </div>
                   <div>
