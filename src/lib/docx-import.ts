@@ -556,6 +556,60 @@ const STYLES = {
   td: "border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top;",
 } as const;
 
+/** Elementos que nunca deben formar parte de un contrato. */
+const FORBIDDEN_TAGS = [
+  "script",
+  "style",
+  "iframe",
+  "object",
+  "embed",
+  "link",
+  "meta",
+  "base",
+  "form",
+  "input",
+  "button",
+  "textarea",
+  "select",
+  "svg",
+  "math",
+].join(",");
+
+/** Atributos que pueden ejecutar código o cargar contenido externo. */
+const FORBIDDEN_ATTRS = ["srcdoc", "formaction", "xlink:href", "background"];
+
+/** Esquemas admitidos en enlaces. Deja fuera javascript: y data:. */
+const SAFE_URL = /^(https?:|mailto:|tel:|#|\/|\.{1,2}\/)/i;
+
+/**
+ * Elimina del documento importado todo lo que pueda ejecutar código.
+ *
+ * El contrato acaba publicándose en la página de firma, que es pública: un
+ * .docx recibido de un tercero no debe poder inyectar nada al firmante.
+ * mammoth no traslada etiquetas crudas del Word, pero sí conserva el destino
+ * de los hipervínculos, y ahí cabe un `javascript:`.
+ */
+function stripUnsafeMarkup(root: Element): void {
+  root.querySelectorAll(FORBIDDEN_TAGS).forEach((el) => el.remove());
+
+  const elements = [root, ...Array.from(root.querySelectorAll("*"))];
+  for (const el of elements) {
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith("on") || FORBIDDEN_ATTRS.includes(name)) {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      if (
+        (name === "href" || name === "src") &&
+        !SAFE_URL.test(attr.value.trim())
+      ) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  }
+}
+
 /**
  * Aplica los estilos del contrato al HTML crudo de mammoth y lo envuelve en el
  * contenedor estándar. Elimina imágenes: el encabezado, el pie y la firma se
@@ -571,6 +625,8 @@ export function normalizeContractHtml(rawHtml: string): {
   );
   const root = doc.body.firstElementChild;
   if (!root) return { html: rawHtml, removedImages: 0 };
+
+  stripUnsafeMarkup(root);
 
   const images = root.querySelectorAll("img");
   const removedImages = images.length;
