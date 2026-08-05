@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 import {
   Bold,
   Italic,
@@ -27,9 +34,15 @@ import {
   Type,
 } from "lucide-react";
 
+export interface RichTextEditorHandle {
+  /** Inserta HTML en la posición del cursor (o al final, en vista de código). */
+  insertHtml: (html: string) => void;
+}
+
 interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
+  ref?: Ref<RichTextEditorHandle>;
 }
 
 // Botón de la barra de herramientas. onMouseDown preventDefault evita perder
@@ -67,9 +80,27 @@ function Divider() {
  * El contenido editado es el `rendered_html` del contrato (sin encabezado/pie,
  * que se inyectan automáticamente al mostrar).
  */
-export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, ref }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [codeView, setCodeView] = useState(false);
+
+  // Permite que el contenedor inserte contenido (p. ej. una variable de
+  // plantilla) sin conocer los detalles del editor.
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertHtml: (html: string) => {
+        if (codeView) {
+          onChange(value + html);
+          return;
+        }
+        editorRef.current?.focus();
+        document.execCommand("insertHTML", false, html);
+        if (editorRef.current) onChange(editorRef.current.innerHTML);
+      },
+    }),
+    [codeView, value, onChange],
+  );
 
   // Sincroniza el DOM cuando el valor cambia desde fuera (cambio de contrato o
   // edición en vista de código). Tras escribir, value === innerHTML, así que

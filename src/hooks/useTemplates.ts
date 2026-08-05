@@ -1,23 +1,29 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { ContractTemplate } from '@/lib/types'
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import type { ContractTemplate } from "@/lib/types";
 
-export function useTemplates() {
-  const [templates, setTemplates] = useState<ContractTemplate[]>([])
-  const [loading, setLoading] = useState(true)
+interface UseTemplatesOptions {
+  /** Incluir plantillas desactivadas (para la pantalla de administración) */
+  includeInactive?: boolean;
+}
 
-  const fetchTemplates = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('contract_templates')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-    if (!error && data) setTemplates(data)
-    setLoading(false)
-  }
+export function useTemplates(options: UseTemplatesOptions = {}) {
+  const includeInactive = options.includeInactive ?? false;
+  const [templates, setTemplates] = useState<ContractTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchTemplates() }, [])
+  const fetchTemplates = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from("contract_templates").select("*");
+    if (!includeInactive) query = query.eq("is_active", true);
+    const { data, error } = await query.order("name");
+    if (!error && data) setTemplates(data);
+    setLoading(false);
+  }, [includeInactive]);
 
-  return { templates, loading, refetch: fetchTemplates }
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
+  return { templates, loading, refetch: fetchTemplates };
 }

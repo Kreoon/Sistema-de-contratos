@@ -147,6 +147,10 @@ export function ContractNew() {
     }
     if (contact.telefono) newData.telefono = contact.telefono;
     if (contact.celular) newData.celular = contact.celular;
+    // Las plantillas usan {{telefono_contratista}}: se toma el fijo y, si no
+    // hay, el celular.
+    const telefonoContacto = contact.telefono || contact.celular;
+    if (telefonoContacto) newData.telefono_contratista = telefonoContacto;
     if (contact.direccion) newData.direccion = contact.direccion;
     if (contact.ciudad) newData.ciudad = contact.ciudad;
     if (contact.departamento) newData.departamento = contact.departamento;
@@ -181,6 +185,7 @@ export function ContractNew() {
         "email",
         "email_contratista",
         "telefono",
+        "telefono_contratista",
         "celular",
         "direccion",
         "ciudad",
