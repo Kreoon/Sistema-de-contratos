@@ -1,80 +1,123 @@
-import { serve } from 'https://deno.land/std@0.192.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { contractId } = await req.json()
+    const { contractId } = await req.json();
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
-    const siteUrl = Deno.env.get('SITE_URL') || 'https://sistema-de-contratos-two.vercel.app'
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const siteUrl =
+      Deno.env.get("SITE_URL") || "https://sistema-de-contratos-two.vercel.app";
 
     if (!resendApiKey) {
       return new Response(
-        JSON.stringify({ error: 'RESEND_API_KEY no configurada' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "RESEND_API_KEY no configurada" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      db: { schema: "contratos" },
+    });
 
     // Fetch contract
     const { data: contract, error: contractError } = await supabase
-      .from('contracts')
-      .select('*')
-      .eq('id', contractId)
-      .single()
+      .from("contracts")
+      .select("*")
+      .eq("id", contractId)
+      .single();
 
     if (contractError || !contract) {
-      return new Response(
-        JSON.stringify({ error: 'Contrato no encontrado' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Contrato no encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Fetch signature for summary
     const { data: signature } = await supabase
-      .from('signatures')
-      .select('*')
-      .eq('contract_id', contractId)
-      .order('created_at', { ascending: false })
+      .from("signatures")
+      .select("*")
+      .eq("contract_id", contractId)
+      .order("created_at", { ascending: false })
       .limit(1)
-      .single()
+      .single();
 
     const signedDate = signature
-      ? new Date(signature.consent_accepted_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })
-      : 'N/A'
+      ? new Date(signature.consent_accepted_at).toLocaleString("es-CO", {
+          timeZone: "America/Bogota",
+        })
+      : "N/A";
 
     // Build device info for email
     const deviceStr = signature?.device_info
-      ? `${signature.device_info.browser || ''} / ${signature.device_info.os || ''} (${signature.device_info.device_type || ''})`
-      : 'N/A'
+      ? `${signature.device_info.browser || ""} / ${signature.device_info.os || ""} (${signature.device_info.device_type || ""})`
+      : "N/A";
 
     const geoStr = signature?.geolocation?.lat
-      ? `${signature.geolocation.lat}, ${signature.geolocation.lng}${signature.geolocation.city ? ` (${signature.geolocation.city}, ${signature.geolocation.country})` : ''}`
-      : 'No disponible'
+      ? `${signature.geolocation.lat}, ${signature.geolocation.lng}${signature.geolocation.city ? ` (${signature.geolocation.city}, ${signature.geolocation.country})` : ""}`
+      : "No disponible";
 
-    // Send email via Resend — email limpio sin adjunto HTML
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    // Adjuntar el PDF firmado si ya está guardado en el Storage
+    const pdfFileName = `${
+      (contract.title || "contrato")
+        .normalize("NFD")
+        .replace(/[^a-zA-Z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .slice(0, 80) || "contrato"
+    }.pdf`;
+
+    let attachments: { filename: string; content: string }[] | undefined;
+    const { data: pdfBlob, error: pdfDownloadError } = await supabase.storage
+      .from("contratos-pdf")
+      .download(`signed/${contractId}.pdf`);
+
+    if (pdfBlob) {
+      const bytes = new Uint8Array(await pdfBlob.arrayBuffer());
+      // Resend limita los adjuntos a 40 MB; dejamos margen de sobra
+      if (bytes.length > 0 && bytes.length < 15_000_000) {
+        attachments = [{ filename: pdfFileName, content: encodeBase64(bytes) }];
+      } else {
+        console.warn(
+          `PDF omitido como adjunto por tamaño: ${bytes.length} bytes`,
+        );
+      }
+    } else {
+      console.warn(
+        "PDF firmado no disponible para adjuntar:",
+        pdfDownloadError?.message,
+      );
+    }
+
+    // Send email via Resend — con el contrato firmado en PDF adjunto
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: 'Feria Effix <noreply@contratos.feriaeffix.com>',
+        from: "Feria Effix <noreply@contratos.feriaeffix.com>",
         to: [contract.signer_email],
         subject: `Contrato firmado: ${contract.title}`,
+        ...(attachments ? { attachments } : {}),
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; padding: 24px 0; border-bottom: 2px solid #1a1a2e;">
@@ -100,14 +143,22 @@ serve(async (req) => {
                     <td style="padding: 8px 0; color: #6c757d; width: 140px;">Firmante:</td>
                     <td style="padding: 8px 0; font-weight: bold;">${contract.signer_name}</td>
                   </tr>
-                  ${contract.signer_document_id ? `<tr>
+                  ${
+                    contract.signer_document_id
+                      ? `<tr>
                     <td style="padding: 8px 0; color: #6c757d;">Documento:</td>
                     <td style="padding: 8px 0;">${contract.signer_document_id}</td>
-                  </tr>` : ''}
-                  ${contract.signer_company ? `<tr>
+                  </tr>`
+                      : ""
+                  }
+                  ${
+                    contract.signer_company
+                      ? `<tr>
                     <td style="padding: 8px 0; color: #6c757d;">Empresa:</td>
                     <td style="padding: 8px 0;">${contract.signer_company}</td>
-                  </tr>` : ''}
+                  </tr>`
+                      : ""
+                  }
                   <tr>
                     <td style="padding: 8px 0; color: #6c757d;">Email:</td>
                     <td style="padding: 8px 0;">${contract.signer_email}</td>
@@ -124,7 +175,7 @@ serve(async (req) => {
                 <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
                   <tr>
                     <td style="padding: 6px 0; color: #6c757d; width: 140px;">Direcci&oacute;n IP:</td>
-                    <td style="padding: 6px 0; font-family: monospace;">${signature?.ip_address || 'N/A'}</td>
+                    <td style="padding: 6px 0; font-family: monospace;">${signature?.ip_address || "N/A"}</td>
                   </tr>
                   <tr>
                     <td style="padding: 6px 0; color: #6c757d;">Dispositivo:</td>
@@ -132,7 +183,7 @@ serve(async (req) => {
                   </tr>
                   <tr>
                     <td style="padding: 6px 0; color: #6c757d;">Pantalla:</td>
-                    <td style="padding: 6px 0;">${signature?.device_info?.screen || 'N/A'}</td>
+                    <td style="padding: 6px 0;">${signature?.device_info?.screen || "N/A"}</td>
                   </tr>
                   <tr>
                     <td style="padding: 6px 0; color: #6c757d;">Geolocalizaci&oacute;n:</td>
@@ -140,17 +191,17 @@ serve(async (req) => {
                   </tr>
                   <tr>
                     <td style="padding: 6px 0; color: #6c757d;">Tipo de firma:</td>
-                    <td style="padding: 6px 0;">${signature?.signature_type === 'drawn' ? 'Firma dibujada' : 'Nombre tipado'}</td>
+                    <td style="padding: 6px 0;">${signature?.signature_type === "drawn" ? "Firma dibujada" : "Nombre tipado"}</td>
                   </tr>
                 </table>
 
                 <div style="margin-top: 16px; padding: 12px; background: #f1f3f5; border-radius: 4px;">
                   <p style="font-size: 11px; color: #6c757d; margin: 0 0 4px 0;">Hash del documento (SHA-256):</p>
-                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.document_hash || 'N/A'}</code>
+                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.document_hash || "N/A"}</code>
                 </div>
                 <div style="margin-top: 8px; padding: 12px; background: #f1f3f5; border-radius: 4px;">
                   <p style="font-size: 11px; color: #6c757d; margin: 0 0 4px 0;">Hash de la firma (SHA-256):</p>
-                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.signature_hash || 'N/A'}</code>
+                  <code style="font-size: 10px; word-break: break-all; color: #333;">${signature?.signature_hash || "N/A"}</code>
                 </div>
               </div>
 
@@ -166,7 +217,11 @@ serve(async (req) => {
                   <strong>Conserve este correo como comprobante legal de su firma.</strong>
                 </p>
                 <p style="margin: 0; font-size: 12px; color: #3b82f6;">
-                  Este email contiene toda la informaci&oacute;n necesaria para verificar la autenticidad de su firma.
+                  ${
+                    attachments
+                      ? "Encontrar&aacute; el contrato firmado en PDF adjunto a este correo."
+                      : "Este email contiene toda la informaci&oacute;n necesaria para verificar la autenticidad de su firma."
+                  }
                 </p>
               </div>
             </div>
@@ -179,38 +234,46 @@ serve(async (req) => {
           </div>
         `,
       }),
-    })
+    });
 
     if (!emailRes.ok) {
-      const errorData = await emailRes.json()
+      const errorData = await emailRes.json();
       return new Response(
-        JSON.stringify({ error: 'Error enviando email', details: errorData }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "Error enviando email", details: errorData }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Audit trail
-    await supabase.from('audit_trail').insert({
+    await supabase.from("audit_trail").insert({
       contract_id: contractId,
-      action: 'email_sent',
-      actor_type: 'system',
+      action: "email_sent",
+      actor_type: "system",
       actor_email: contract.signer_email,
       metadata: {
-        type: 'signed_copy',
-        email_provider: 'resend',
+        type: "signed_copy",
+        email_provider: "resend",
         subject: `Contrato firmado: ${contract.title}`,
+        pdf_attached: !!attachments,
       },
-    })
+    });
 
-    const emailData = await emailRes.json()
+    const emailData = await emailRes.json();
     return new Response(
-      JSON.stringify({ success: true, emailId: emailData.id }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({
+        success: true,
+        emailId: emailData.id,
+        pdfAttached: !!attachments,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});

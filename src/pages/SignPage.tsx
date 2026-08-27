@@ -1,204 +1,244 @@
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { Loader2, AlertTriangle, Camera, X, ImageIcon } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { sha256 } from '@/lib/hashing'
-import { captureAuditMetadata } from '@/lib/audit'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { SignaturePad } from '@/components/signing/SignaturePad'
-import { SigningConsent, CONSENT_TEXT } from '@/components/signing/SigningConsent'
-import type { Contract } from '@/lib/types'
-import { injectContractBranding } from '@/lib/template-engine'
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2, AlertTriangle, Camera, X, ImageIcon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { sha256 } from "@/lib/hashing";
+import { captureAuditMetadata } from "@/lib/audit";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SignaturePad } from "@/components/signing/SignaturePad";
+import {
+  SigningConsent,
+  CONSENT_TEXT,
+} from "@/components/signing/SigningConsent";
+import type { Contract } from "@/lib/types";
+import { injectContractBranding } from "@/lib/template-engine";
+import { generateAndStoreSignedPdf, invokeFunction } from "@/lib/pdf";
 
 interface SignatureState {
-  type: 'drawn' | 'typed'
-  value: string
+  type: "drawn" | "typed";
+  value: string;
 }
 
 export function SignPage() {
-  const { token } = useParams<{ token: string }>()
-  const navigate = useNavigate()
-  const [contract, setContract] = useState<Contract | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [signatureData, setSignatureData] = useState<SignatureState | null>(null)
-  const [consentAccepted, setConsentAccepted] = useState(false)
-  const [signing, setSigning] = useState(false)
-  const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null)
-  const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(null)
-  const [idDocumentBackFile, setIdDocumentBackFile] = useState<File | null>(null)
-  const [idDocumentBackPreview, setIdDocumentBackPreview] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const fileInputBackRef = useRef<HTMLInputElement>(null)
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [signatureData, setSignatureData] = useState<SignatureState | null>(
+    null,
+  );
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null);
+  const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(
+    null,
+  );
+  const [idDocumentBackFile, setIdDocumentBackFile] = useState<File | null>(
+    null,
+  );
+  const [idDocumentBackPreview, setIdDocumentBackPreview] = useState<
+    string | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputBackRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!token) return
+    if (!token) return;
 
     async function loadContract() {
-      const { data, error: rpcError } = await supabase.rpc('get_contract_by_token', {
-        p_token: token,
-      })
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_contract_by_token",
+        {
+          p_token: token,
+        },
+      );
 
       if (rpcError || !data || data.length === 0) {
-        setError('Este enlace de firma no es válido, ya fue utilizado o ha expirado.')
-        setLoading(false)
-        return
+        setError(
+          "Este enlace de firma no es válido, ya fue utilizado o ha expirado.",
+        );
+        setLoading(false);
+        return;
       }
 
-      const contractData = data[0] as Contract
-      setContract(contractData)
+      const contractData = data[0] as Contract;
+      setContract(contractData);
 
       // Registrar visualización del contrato
-      const metadata = await captureAuditMetadata()
-      await supabase.rpc('mark_contract_viewed', {
+      const metadata = await captureAuditMetadata();
+      await supabase.rpc("mark_contract_viewed", {
         p_token: token,
         p_ip_address: metadata.ip_address,
         p_user_agent: metadata.user_agent,
-      })
+      });
 
-      setLoading(false)
+      setLoading(false);
     }
 
-    loadContract()
-  }, [token])
+    loadContract();
+  }, [token]);
 
   const handleIdDocumentSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Solo se permiten imágenes (JPG, PNG, etc.)')
-      return
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten imágenes (JPG, PNG, etc.)");
+      return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('La imagen no puede superar 10MB')
-      return
+      toast.error("La imagen no puede superar 10MB");
+      return;
     }
 
-    setIdDocumentFile(file)
-    const reader = new FileReader()
-    reader.onload = (ev) => setIdDocumentPreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
-  }
+    setIdDocumentFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setIdDocumentPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const removeIdDocument = () => {
-    setIdDocumentFile(null)
-    setIdDocumentPreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
+    setIdDocumentFile(null);
+    setIdDocumentPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-  const handleIdDocumentBackSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleIdDocumentBackSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Solo se permiten imágenes (JPG, PNG, etc.)')
-      return
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten imágenes (JPG, PNG, etc.)");
+      return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('La imagen no puede superar 10MB')
-      return
+      toast.error("La imagen no puede superar 10MB");
+      return;
     }
 
-    setIdDocumentBackFile(file)
-    const reader = new FileReader()
-    reader.onload = (ev) => setIdDocumentBackPreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
-  }
+    setIdDocumentBackFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) =>
+      setIdDocumentBackPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const removeIdDocumentBack = () => {
-    setIdDocumentBackFile(null)
-    setIdDocumentBackPreview(null)
-    if (fileInputBackRef.current) fileInputBackRef.current.value = ''
-  }
+    setIdDocumentBackFile(null);
+    setIdDocumentBackPreview(null);
+    if (fileInputBackRef.current) fileInputBackRef.current.value = "";
+  };
 
   const handleSign = async () => {
-    if (!contract || !signatureData || !signatureData.value || !consentAccepted) {
-      toast.error('Complete todos los campos requeridos')
-      return
+    if (
+      !contract ||
+      !signatureData ||
+      !signatureData.value ||
+      !consentAccepted
+    ) {
+      toast.error("Complete todos los campos requeridos");
+      return;
     }
 
-    setSigning(true)
+    setSigning(true);
 
     try {
-      const metadata = await captureAuditMetadata()
-      const documentHash = await sha256(contract.rendered_html ?? '')
-      const signatureHash = await sha256(signatureData.value)
+      const metadata = await captureAuditMetadata();
+      const documentHash = await sha256(contract.rendered_html ?? "");
+      const signatureHash = await sha256(signatureData.value);
 
-      let signatureImageUrl: string | null = null
-      let idDocumentImageUrl: string | null = null
-      let idDocumentBackImageUrl: string | null = null
+      let signatureImageUrl: string | null = null;
+      let idDocumentImageUrl: string | null = null;
+      let idDocumentBackImageUrl: string | null = null;
 
       // Subir foto frontal del documento de identidad (opcional)
       if (idDocumentFile) {
-        const idFilePath = `${contract.id}/id-front-${Date.now()}.${idDocumentFile.name.split('.').pop()}`
+        const idFilePath = `${contract.id}/id-front-${Date.now()}.${idDocumentFile.name.split(".").pop()}`;
         const { data: idUpload, error: idUploadError } = await supabase.storage
-          .from('signatures')
-          .upload(idFilePath, idDocumentFile, { contentType: idDocumentFile.type })
+          .from("contratos-signatures")
+          .upload(idFilePath, idDocumentFile, {
+            contentType: idDocumentFile.type,
+          });
 
         if (idUploadError) {
-          console.warn('No se pudo subir la foto del documento:', idUploadError.message)
+          console.warn(
+            "No se pudo subir la foto del documento:",
+            idUploadError.message,
+          );
         } else {
           const { data: idUrlData } = supabase.storage
-            .from('signatures')
-            .getPublicUrl(idUpload.path)
-          idDocumentImageUrl = idUrlData.publicUrl
+            .from("contratos-signatures")
+            .getPublicUrl(idUpload.path);
+          idDocumentImageUrl = idUrlData.publicUrl;
         }
       }
 
       // Subir foto posterior del documento (opcional)
       if (idDocumentBackFile) {
-        const idBackPath = `${contract.id}/id-back-${Date.now()}.${idDocumentBackFile.name.split('.').pop()}`
-        const { data: idBackUpload, error: idBackError } = await supabase.storage
-          .from('signatures')
-          .upload(idBackPath, idDocumentBackFile, { contentType: idDocumentBackFile.type })
+        const idBackPath = `${contract.id}/id-back-${Date.now()}.${idDocumentBackFile.name.split(".").pop()}`;
+        const { data: idBackUpload, error: idBackError } =
+          await supabase.storage
+            .from("contratos-signatures")
+            .upload(idBackPath, idDocumentBackFile, {
+              contentType: idDocumentBackFile.type,
+            });
 
         if (idBackError) {
-          console.warn('No se pudo subir la foto posterior:', idBackError.message)
+          console.warn(
+            "No se pudo subir la foto posterior:",
+            idBackError.message,
+          );
         } else {
           const { data: idBackUrlData } = supabase.storage
-            .from('signatures')
-            .getPublicUrl(idBackUpload.path)
-          idDocumentBackImageUrl = idBackUrlData.publicUrl
+            .from("contratos-signatures")
+            .getPublicUrl(idBackUpload.path);
+          idDocumentBackImageUrl = idBackUrlData.publicUrl;
         }
       }
 
       // Subir imagen de firma dibujada al storage
-      if (signatureData.type === 'drawn') {
-        const base64 = signatureData.value.split(',')[1]
-        const byteCharacters = atob(base64)
-        const byteNumbers = new Array(byteCharacters.length)
+      if (signatureData.type === "drawn") {
+        const base64 = signatureData.value.split(",")[1];
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i)
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
-        const byteArray = new Uint8Array(byteNumbers)
-        const blob = new Blob([byteArray], { type: 'image/png' })
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/png" });
 
-        const filePath = `${contract.id}/${Date.now()}.png`
+        const filePath = `${contract.id}/${Date.now()}.png`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('signatures')
-          .upload(filePath, blob, { contentType: 'image/png' })
+          .from("contratos-signatures")
+          .upload(filePath, blob, { contentType: "image/png" });
 
         if (uploadError) {
-          console.warn('No se pudo subir la imagen de firma:', uploadError.message)
+          console.warn(
+            "No se pudo subir la imagen de firma:",
+            uploadError.message,
+          );
         } else {
           const { data: urlData } = supabase.storage
-            .from('signatures')
-            .getPublicUrl(uploadData.path)
-          signatureImageUrl = urlData.publicUrl
+            .from("contratos-signatures")
+            .getPublicUrl(uploadData.path);
+          signatureImageUrl = urlData.publicUrl;
         }
       }
 
       // Llamar a la función de firma
-      const { error: signError } = await supabase.rpc('sign_contract', {
+      const { error: signError } = await supabase.rpc("sign_contract", {
         p_token: token,
         p_signature_type: signatureData.type,
         p_signature_image_url: signatureImageUrl,
-        p_typed_name: signatureData.type === 'typed' ? signatureData.value : null,
+        p_typed_name:
+          signatureData.type === "typed" ? signatureData.value : null,
         p_document_hash: documentHash,
         p_signature_hash: signatureHash,
         p_ip_address: metadata.ip_address,
@@ -208,28 +248,53 @@ export function SignPage() {
         p_consent_text: CONSENT_TEXT,
         p_id_document_image_url: idDocumentImageUrl,
         p_id_document_back_image_url: idDocumentBackImageUrl,
-      })
+      });
 
       if (signError) {
-        toast.error('Error al firmar', { description: signError.message })
-        setSigning(false)
-        return
+        toast.error("Error al firmar", { description: signError.message });
+        setSigning(false);
+        return;
       }
 
-      toast.success('Contrato firmado exitosamente')
+      toast.success("Contrato firmado exitosamente");
 
-      // Generar PDF con certificado y enviar copia por email (await para que no se corte)
-      await supabase.functions.invoke('generate-pdf', {
-        body: { contractId: contract.id },
-      })
+      // Generar el PDF con certificado, guardarlo y enviar la copia por email.
+      // Se hace aquí (y no en el servidor) porque el PDF se rasteriza en el navegador.
+      try {
+        const result = await generateAndStoreSignedPdf(contract.id, {
+          sendCopy: true,
+        });
+        if (!result.emailSent) {
+          console.error("No se pudo enviar la copia:", result.emailError);
+          toast.warning("El contrato quedó firmado", {
+            description:
+              "No pudimos enviar la copia por email. Puede descargarla en la siguiente pantalla.",
+          });
+        }
+      } catch (pdfError) {
+        console.error("Error generando el PDF firmado:", pdfError);
+        // Aunque falle el PDF, la copia por email debe salir igual
+        try {
+          await invokeFunction("generate-pdf", {
+            contractId: contract.id,
+            sendCopy: true,
+          });
+        } catch (mailError) {
+          console.error("Error enviando la copia firmada:", mailError);
+        }
+        toast.warning("El contrato quedó firmado", {
+          description:
+            "Hubo un problema al preparar el PDF. Puede descargarlo en la siguiente pantalla.",
+        });
+      }
 
-      navigate(`/sign/${token}/complete`)
+      navigate(`/sign/${token}/complete`);
     } catch (err) {
-      toast.error('Error inesperado al firmar')
-      console.error(err)
-      setSigning(false)
+      toast.error("Error inesperado al firmar");
+      console.error(err);
+      setSigning(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -238,22 +303,25 @@ export function SignPage() {
           <Loader2 className="animate-spin mr-2" /> Cargando contrato...
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
     return (
       <Card>
         <CardContent className="text-center py-16">
-          <AlertTriangle size={48} className="mx-auto mb-4 text-[hsl(var(--destructive))]" />
+          <AlertTriangle
+            size={48}
+            className="mx-auto mb-4 text-[hsl(var(--destructive))]"
+          />
           <h2 className="text-xl font-bold mb-2">Enlace no válido</h2>
           <p className="text-[hsl(var(--muted-foreground))]">{error}</p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  if (!contract) return null
+  if (!contract) return null;
 
   return (
     <div className="space-y-6">
@@ -267,7 +335,9 @@ export function SignPage() {
         <CardContent>
           <div
             className="prose prose-sm max-w-none border rounded-md p-6 bg-white text-black overflow-auto max-h-[60vh]"
-            dangerouslySetInnerHTML={{ __html: injectContractBranding(contract.rendered_html ?? '') }}
+            dangerouslySetInnerHTML={{
+              __html: injectContractBranding(contract.rendered_html ?? ""),
+            }}
           />
         </CardContent>
       </Card>
@@ -280,10 +350,14 @@ export function SignPage() {
           {/* Foto del documento de identidad */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Foto del documento de identidad <span className="text-[hsl(var(--muted-foreground))] font-normal">(opcional)</span>
+              Foto del documento de identidad{" "}
+              <span className="text-[hsl(var(--muted-foreground))] font-normal">
+                (opcional)
+              </span>
             </label>
             <p className="text-xs text-[hsl(var(--muted-foreground))]">
-              Suba una foto clara de su documento de identidad (cédula, pasaporte, etc.) para verificar su identidad.
+              Suba una foto clara de su documento de identidad (cédula,
+              pasaporte, etc.) para verificar su identidad.
             </p>
 
             {idDocumentPreview ? (
@@ -311,7 +385,9 @@ export function SignPage() {
                     <Camera size={24} />
                     <ImageIcon size={24} />
                   </div>
-                  <p className="text-sm font-medium">Tomar foto o seleccionar imagen</p>
+                  <p className="text-sm font-medium">
+                    Tomar foto o seleccionar imagen
+                  </p>
                   <p className="text-xs">JPG, PNG — máximo 10MB</p>
                 </div>
               </div>
@@ -330,10 +406,14 @@ export function SignPage() {
           {/* Foto posterior del documento (opcional) */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Parte posterior del documento <span className="text-[hsl(var(--muted-foreground))] font-normal">(opcional)</span>
+              Parte posterior del documento{" "}
+              <span className="text-[hsl(var(--muted-foreground))] font-normal">
+                (opcional)
+              </span>
             </label>
             <p className="text-xs text-[hsl(var(--muted-foreground))]">
-              Si su documento tiene información en el reverso, suba una foto de la parte posterior.
+              Si su documento tiene información en el reverso, suba una foto de
+              la parte posterior.
             </p>
 
             {idDocumentBackPreview ? (
@@ -375,7 +455,10 @@ export function SignPage() {
           </div>
 
           <SignaturePad onSignature={setSignatureData} />
-          <SigningConsent accepted={consentAccepted} onAccept={setConsentAccepted} />
+          <SigningConsent
+            accepted={consentAccepted}
+            onAccept={setConsentAccepted}
+          />
           <Button
             onClick={handleSign}
             disabled={signing || !signatureData?.value || !consentAccepted}
@@ -387,11 +470,11 @@ export function SignPage() {
                 <Loader2 className="animate-spin mr-2" size={16} /> Firmando...
               </>
             ) : (
-              'Firmar Contrato'
+              "Firmar Contrato"
             )}
           </Button>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

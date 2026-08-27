@@ -1,36 +1,41 @@
-import { serve } from 'https://deno.land/std@0.192.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { contractId, signerEmail, signerName, signingUrl, contractTitle } = await req.json()
+    const { contractId, signerEmail, signerName, signingUrl, contractTitle } =
+      await req.json();
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       return new Response(
-        JSON.stringify({ error: 'RESEND_API_KEY no configurada' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "RESEND_API_KEY no configurada" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Send email via Resend
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: 'Feria Effix <noreply@contratos.feriaeffix.com>',
+        from: "Feria Effix <noreply@contratos.feriaeffix.com>",
         to: [signerEmail],
         subject: `Contrato pendiente de firma: ${contractTitle}`,
         html: `
@@ -54,38 +59,46 @@ serve(async (req) => {
           </div>
         `,
       }),
-    })
+    });
 
     if (!emailRes.ok) {
-      const errorData = await emailRes.json()
+      const errorData = await emailRes.json();
       return new Response(
-        JSON.stringify({ error: 'Error enviando email', details: errorData }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "Error enviando email", details: errorData }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Log audit trail
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      db: { schema: "contratos" },
+    });
 
-    await supabase.from('audit_trail').insert({
+    await supabase.from("audit_trail").insert({
       contract_id: contractId,
-      action: 'email_sent',
-      actor_type: 'system',
+      action: "email_sent",
+      actor_type: "system",
       actor_email: signerEmail,
-      metadata: { email_provider: 'resend', subject: `Contrato pendiente de firma: ${contractTitle}` },
-    })
+      metadata: {
+        email_provider: "resend",
+        subject: `Contrato pendiente de firma: ${contractTitle}`,
+      },
+    });
 
-    const emailData = await emailRes.json()
+    const emailData = await emailRes.json();
     return new Response(
       JSON.stringify({ success: true, emailId: emailData.id }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});

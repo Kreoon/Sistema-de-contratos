@@ -1,91 +1,232 @@
-import { serve } from 'https://deno.land/std@0.192.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+/** Nombre de archivo seguro a partir del título del contrato. */
+function buildFileName(title: string): string {
+  const clean = (title || "contrato")
+    .normalize("NFD")
+    .replace(/[^a-zA-Z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 80);
+  return `${clean || "contrato"}.pdf`;
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { contractId } = await req.json()
+    const { contractId, pdfBase64, sendCopy } = await req.json();
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      db: { schema: "contratos" },
+    });
 
     // Fetch contract
     const { data: contract, error: contractError } = await supabase
-      .from('contracts')
-      .select('*')
-      .eq('id', contractId)
-      .single()
+      .from("contracts")
+      .select("*")
+      .eq("id", contractId)
+      .single();
 
     if (contractError || !contract) {
-      return new Response(
-        JSON.stringify({ error: 'Contrato no encontrado' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Contrato no encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Fetch signature
+    const fileName = buildFileName(contract.title);
+
+    // ── Modo 2: el cliente ya rasterizó el PDF → lo guardamos en el Storage ──
+    if (typeof pdfBase64 === "string" && pdfBase64.length > 0) {
+      let pdfBytes: Uint8Array;
+      try {
+        pdfBytes = decodeBase64(pdfBase64);
+      } catch {
+        return new Response(JSON.stringify({ error: "PDF inválido" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Un PDF válido siempre empieza con "%PDF"
+      const magic = new TextDecoder().decode(pdfBytes.slice(0, 4));
+      if (magic !== "%PDF") {
+        return new Response(
+          JSON.stringify({ error: "El archivo recibido no es un PDF" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const filePath = `signed/${contractId}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("contratos-pdf")
+        .upload(filePath, pdfBytes, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return new Response(
+          JSON.stringify({
+            error: "Error subiendo el PDF",
+            details: uploadError.message,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("contratos-pdf")
+        .getPublicUrl(filePath);
+      // Evita que el CDN sirva una versión anterior tras regenerar el documento
+      const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
+      await supabase
+        .from("contracts")
+        .update({ signed_pdf_url: publicUrl, status: "completed" })
+        .eq("id", contractId);
+
+      await supabase.from("audit_trail").insert({
+        contract_id: contractId,
+        action: "downloaded",
+        actor_type: "system",
+        metadata: {
+          file_path: filePath,
+          format: "pdf",
+          size_bytes: pdfBytes.length,
+          has_certificate: true,
+        },
+      });
+
+      // Borra el HTML de versiones anteriores para no dejar archivos huérfanos
+      await supabase.storage
+        .from("contratos-pdf")
+        .remove([`signed/${contractId}.html`]);
+
+      let emailSent = false;
+      let emailError: string | undefined;
+
+      if (sendCopy) {
+        try {
+          const sendRes = await fetch(
+            `${supabaseUrl}/functions/v1/send-signed-copy`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${supabaseKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ contractId }),
+            },
+          );
+          if (sendRes.ok) {
+            emailSent = true;
+          } else {
+            emailError = await sendRes.text();
+            console.error(
+              "send-signed-copy error:",
+              sendRes.status,
+              emailError,
+            );
+          }
+        } catch (err) {
+          emailError = (err as Error).message;
+          console.error("Error invocando send-signed-copy:", err);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          url: publicUrl,
+          emailSent,
+          emailError,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── Modo 1: devolvemos el HTML del contrato firmado para que el cliente
+    //    lo rasterice y lo convierta en PDF ─────────────────────────────────
     const { data: signature } = await supabase
-      .from('signatures')
-      .select('*')
-      .eq('contract_id', contractId)
-      .order('created_at', { ascending: false })
+      .from("signatures")
+      .select("*")
+      .eq("contract_id", contractId)
+      .order("created_at", { ascending: false })
       .limit(1)
-      .single()
+      .single();
 
     // Build signature image HTML
-    let signatureHtml = ''
-    if (signature?.signature_type === 'drawn' && signature.signature_image_url) {
-      signatureHtml = `<img src="${signature.signature_image_url}" style="max-height: 80px; max-width: 200px;" alt="Firma electrónica" />`
-    } else if (signature?.signature_type === 'typed' && signature.typed_name) {
-      signatureHtml = `<span style="font-family: 'Brush Script MT', cursive; font-size: 28px;">${signature.typed_name}</span>`
+    let signatureHtml = "";
+    if (
+      signature?.signature_type === "drawn" &&
+      signature.signature_image_url
+    ) {
+      signatureHtml = `<img src="${signature.signature_image_url}" style="max-height: 80px; max-width: 200px;" alt="Firma electrónica" />`;
+    } else if (signature?.signature_type === "typed" && signature.typed_name) {
+      signatureHtml = `<span style="font-family: 'Brush Script MT', cursive; font-size: 28px;">${signature.typed_name}</span>`;
     }
 
     // Replace signature placeholder in contract HTML
-    let contractHtml = contract.rendered_html || ''
+    let contractHtml = contract.rendered_html || "";
     contractHtml = contractHtml.replace(
       /\[Firma electrónica\]/g,
-      signatureHtml
-    )
+      signatureHtml,
+    );
 
     // Inject employer signature (Omar Stevenson Rivera) if not already present
-    if (!contractHtml.includes('firma-omar-stevenson')) {
-      const employerSigHtml = '<img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />'
+    if (!contractHtml.includes("firma-omar-stevenson")) {
+      const employerSigHtml =
+        '<img src="/firma-omar-stevenson.png" alt="Firma Omar Stevenson Rivera" style="max-height: 80px; max-width: 200px; margin-bottom: 4px;" />';
       contractHtml = contractHtml.replace(
         /(<div style="border-top: 1px solid #1a1a1a; padding-top: 12px;">\s*<p[^>]*>(?:EL CONTRATANTE|EL CONCEDENTE)<\/p>)/g,
-        `${employerSigHtml}\n      $1`
-      )
+        `${employerSigHtml}\n      $1`,
+      );
     }
 
     // Format date for Colombia timezone
     const signedDate = signature
-      ? new Date(signature.consent_accepted_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })
-      : 'N/A'
+      ? new Date(signature.consent_accepted_at).toLocaleString("es-CO", {
+          timeZone: "America/Bogota",
+        })
+      : "N/A";
 
     // Build geolocation string
-    const geo = signature?.geolocation
-    const geoString = geo?.lat && geo?.lng
-      ? `${geo.lat}, ${geo.lng}${geo.city ? ` (${geo.city}, ${geo.country})` : ''}`
-      : 'No disponible'
+    const geo = signature?.geolocation;
+    const geoString =
+      geo?.lat && geo?.lng
+        ? `${geo.lat}, ${geo.lng}${geo.city ? ` (${geo.city}, ${geo.country})` : ""}`
+        : "No disponible";
 
     // Build device info string
-    const device = signature?.device_info
+    const device = signature?.device_info;
     const deviceString = device
-      ? `${device.browser || 'N/A'} / ${device.os || 'N/A'} (${device.device_type || 'N/A'})`
-      : 'N/A'
-    const screenString = device?.screen || 'N/A'
+      ? `${device.browser || "N/A"} / ${device.os || "N/A"} (${device.device_type || "N/A"})`
+      : "N/A";
+    const screenString = device?.screen || "N/A";
 
     // Build certificate HTML
     const certificateHtml = `
-      <div style="page-break-before: always; border-top: 3px solid #1a1a2e; margin-top: 40px; padding-top: 30px;">
+      <div style="border-top: 3px solid #1a1a2e; margin-top: 40px; padding-top: 30px;">
         <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 30px; font-family: Arial, sans-serif;">
           <div style="text-align: center; margin-bottom: 24px;">
             <div style="font-size: 12px; color: #6c757d; letter-spacing: 2px; text-transform: uppercase;">Certificado de</div>
@@ -102,23 +243,31 @@ serve(async (req) => {
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Email</td>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${contract.signer_email}</td>
             </tr>
-            ${contract.signer_document_id ? `
+            ${
+              contract.signer_document_id
+                ? `
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Documento</td>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${contract.signer_document_id}</td>
-            </tr>` : ''}
-            ${contract.signer_company ? `
+            </tr>`
+                : ""
+            }
+            ${
+              contract.signer_company
+                ? `
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Empresa</td>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${contract.signer_company}</td>
-            </tr>` : ''}
+            </tr>`
+                : ""
+            }
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Fecha y hora</td>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${signedDate} (UTC-5 Colombia)</td>
             </tr>
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Direcci&oacute;n IP</td>
-              <td style="padding: 8px 12px; border-bottom: 1px solid #eee; font-family: monospace;">${signature?.ip_address || 'N/A'}</td>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #eee; font-family: monospace;">${signature?.ip_address || "N/A"}</td>
             </tr>
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Dispositivo</td>
@@ -134,45 +283,57 @@ serve(async (req) => {
             </tr>
             <tr>
               <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #6c757d;">Tipo de firma</td>
-              <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${signature?.signature_type === 'drawn' ? 'Firma dibujada' : 'Nombre tipado'}</td>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${signature?.signature_type === "drawn" ? "Firma dibujada" : "Nombre tipado"}</td>
             </tr>
           </table>
 
-          ${signature?.id_document_image_url ? `
+          ${
+            signature?.id_document_image_url
+              ? `
           <div style="margin: 20px 0; padding: 16px; border: 1px solid #dee2e6; border-radius: 4px; background: white;">
             <div style="font-size: 11px; color: #6c757d; margin-bottom: 8px; text-align: center;">DOCUMENTO DE IDENTIDAD</div>
-            <div style="text-align: center; ${signature?.id_document_back_image_url ? 'display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;' : ''}">
-              <div>
+            <div style="text-align: center;">
+              <div style="display: inline-block; vertical-align: top; margin: 0 6px;">
                 <div style="font-size: 10px; color: #999; margin-bottom: 4px;">Frontal</div>
-                <img src="${signature.id_document_image_url}" style="max-height: 200px; max-width: 100%; border-radius: 4px;" alt="Documento de identidad (frontal)" />
+                <img src="${signature.id_document_image_url}" style="max-height: 200px; max-width: 300px; border-radius: 4px;" alt="Documento de identidad (frontal)" />
               </div>
-              ${signature?.id_document_back_image_url ? `
-              <div>
+              ${
+                signature?.id_document_back_image_url
+                  ? `
+              <div style="display: inline-block; vertical-align: top; margin: 0 6px;">
                 <div style="font-size: 10px; color: #999; margin-bottom: 4px;">Posterior</div>
-                <img src="${signature.id_document_back_image_url}" style="max-height: 200px; max-width: 100%; border-radius: 4px;" alt="Documento de identidad (posterior)" />
-              </div>` : ''}
+                <img src="${signature.id_document_back_image_url}" style="max-height: 200px; max-width: 300px; border-radius: 4px;" alt="Documento de identidad (posterior)" />
+              </div>`
+                  : ""
+              }
             </div>
-          </div>` : ''}
+          </div>`
+              : ""
+          }
 
-          ${signatureHtml ? `
+          ${
+            signatureHtml
+              ? `
           <div style="margin: 20px 0; padding: 16px; border: 1px dashed #dee2e6; border-radius: 4px; text-align: center; background: white;">
             <div style="font-size: 11px; color: #6c757d; margin-bottom: 8px;">FIRMA</div>
             ${signatureHtml}
-          </div>` : ''}
+          </div>`
+              : ""
+          }
 
           <div style="margin-top: 20px; padding: 16px; background: #e9ecef; border-radius: 4px;">
             <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">HASH DEL DOCUMENTO (SHA-256)</div>
-            <code style="font-size: 11px; word-break: break-all; color: #333;">${signature?.document_hash || 'N/A'}</code>
+            <code style="font-size: 11px; word-break: break-all; color: #333;">${signature?.document_hash || "N/A"}</code>
           </div>
 
           <div style="margin-top: 12px; padding: 16px; background: #e9ecef; border-radius: 4px;">
             <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">HASH DE LA FIRMA (SHA-256)</div>
-            <code style="font-size: 11px; word-break: break-all; color: #333;">${signature?.signature_hash || 'N/A'}</code>
+            <code style="font-size: 11px; word-break: break-all; color: #333;">${signature?.signature_hash || "N/A"}</code>
           </div>
 
           <div style="margin-top: 20px; padding: 16px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px; color: #6c757d;">
             <strong>Consentimiento otorgado:</strong><br/>
-            ${signature?.consent_text || 'N/A'}
+            ${signature?.consent_text || "N/A"}
           </div>
 
           <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #999;">
@@ -181,120 +342,48 @@ serve(async (req) => {
           </div>
         </div>
       </div>
-    `
+    `;
 
-    // Build full HTML document with A4 pages, repeating header/footer
-    const fullHtml = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    @page {
-      size: A4;
-      margin: 100px 2cm 80px 2cm;
-    }
-    body {
-      font-family: Georgia, serif;
-      line-height: 1.6;
-      color: #333;
-      margin: 0;
-      padding: 20px;
-    }
-    .contract { max-width: 100%; }
-    .page-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      text-align: center;
-      padding: 0 2cm;
-    }
-    .page-header img { width: 100%; }
-    .page-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      text-align: center;
-      padding: 0 2cm;
-    }
-    .page-footer img { width: 100%; }
-    .content { margin-top: 10px; }
-    @media print {
-      body { padding: 0; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-header"><img src="/Encabezado.png" alt="Encabezado" /></div>
-  <div class="page-footer"><img src="/Pie de pagina.png" alt="Pie de página" /></div>
-  <div class="content">
-    <div class="contract">${contractHtml}</div>
-    ${certificateHtml}
-  </div>
-</body>
-</html>`
+    const html = `<div class="contract">${contractHtml}</div>${certificateHtml}`;
 
-    // Upload to Storage
-    const filePath = `signed/${contractId}.html`
-    const encoder = new TextEncoder()
-    const htmlBytes = encoder.encode(fullHtml)
-    const { error: uploadError } = await supabase.storage
-      .from('contracts-pdf')
-      .upload(filePath, htmlBytes, {
-        contentType: 'text/html; charset=utf-8',
-        upsert: true,
-      })
-
-    if (uploadError) {
-      return new Response(
-        JSON.stringify({ error: 'Error subiendo archivo', details: uploadError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const { data: urlData } = supabase.storage.from('contracts-pdf').getPublicUrl(filePath)
-
-    // Update contract with PDF URL and mark as completed
-    await supabase.from('contracts').update({
-      signed_pdf_url: urlData.publicUrl,
-      status: 'completed',
-    }).eq('id', contractId)
-
-    // Audit trail
-    await supabase.from('audit_trail').insert({
-      contract_id: contractId,
-      action: 'downloaded',
-      actor_type: 'system',
-      metadata: { file_path: filePath, format: 'html', has_certificate: true },
-    })
-
-    // Enviar copia firmada por email desde el servidor
-    try {
-      const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-signed-copy`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contractId }),
-      })
-      if (!sendRes.ok) {
-        const errBody = await sendRes.text()
-        console.error('send-signed-copy error:', sendRes.status, errBody)
+    let emailSent = false;
+    let emailError: string | undefined;
+    if (sendCopy) {
+      try {
+        const sendRes = await fetch(
+          `${supabaseUrl}/functions/v1/send-signed-copy`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${supabaseKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ contractId }),
+          },
+        );
+        emailSent = sendRes.ok;
+        if (!sendRes.ok) emailError = await sendRes.text();
+      } catch (err) {
+        emailError = (err as Error).message;
       }
-    } catch (err) {
-      console.error('Error invocando send-signed-copy:', err)
     }
 
     return new Response(
-      JSON.stringify({ success: true, url: urlData.publicUrl }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({
+        html,
+        title: contract.title,
+        fileName,
+        headerUrl: "/Encabezado.png",
+        footerUrl: "/Pie de pagina.png",
+        emailSent,
+        emailError,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});

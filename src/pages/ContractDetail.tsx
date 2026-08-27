@@ -27,6 +27,12 @@ import type {
   ContractStatus,
 } from "@/lib/types";
 import { injectContractBranding } from "@/lib/template-engine";
+import {
+  downloadSignedPdf,
+  generateAndStoreSignedPdf,
+  invokeFunction,
+  isStoredPdf,
+} from "@/lib/pdf";
 
 export function ContractDetail() {
   const { id } = useParams<{ id: string }>();
@@ -163,25 +169,47 @@ export function ContractDetail() {
     }
   };
 
+  /** Refresca el contrato desde la base tras regenerar el PDF. */
+  const reloadContract = async () => {
+    if (!contract) return;
+    const { data: updated } = await supabase
+      .from("contracts")
+      .select("*, template:contract_templates(name)")
+      .eq("id", contract.id)
+      .single();
+    if (updated) setContract(updated as Contract);
+  };
+
   const generatePdf = async () => {
     if (!contract) return;
     setRegeneratingPdf(true);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-pdf", {
-        body: { contractId: contract.id },
+      await generateAndStoreSignedPdf(contract.id, { download: true });
+      await reloadContract();
+      toast.success("PDF generado y descargado");
+    } catch (err) {
+      toast.error("Error generando PDF", {
+        description: err instanceof Error ? err.message : undefined,
       });
-      if (error) throw error;
-      // Recargar contrato para obtener signed_pdf_url
-      const { data: updated } = await supabase
-        .from("contracts")
-        .select("*, template:contract_templates(name)")
-        .eq("id", contract.id)
-        .single();
-      if (updated) setContract(updated as Contract);
-      toast.success("PDF generado correctamente");
-      if (data?.url) window.open(data.url, "_blank");
-    } catch {
-      toast.error("Error generando PDF");
+    } finally {
+      setRegeneratingPdf(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    if (!contract) return;
+    setRegeneratingPdf(true);
+    try {
+      await downloadSignedPdf(
+        contract.id,
+        contract.signed_pdf_url,
+        contract.title,
+      );
+      if (!isStoredPdf(contract.signed_pdf_url)) await reloadContract();
+    } catch (err) {
+      toast.error("Error descargando el PDF", {
+        description: err instanceof Error ? err.message : undefined,
+      });
     } finally {
       setRegeneratingPdf(false);
     }
@@ -191,26 +219,19 @@ export function ContractDetail() {
     if (!contract) return;
     setResendingCopy(true);
     try {
-      // Si no tiene PDF, regenerar primero
-      if (!contract.signed_pdf_url) {
+      // El email lleva el PDF adjunto: si aún no existe, se genera primero
+      if (!isStoredPdf(contract.signed_pdf_url)) {
         setRegeneratingPdf(true);
-        const { error: pdfError } = await supabase.functions.invoke(
-          "generate-pdf",
-          {
-            body: { contractId: contract.id },
-          },
-        );
+        await generateAndStoreSignedPdf(contract.id);
         setRegeneratingPdf(false);
-        if (pdfError) throw pdfError;
-      } else {
-        const { error } = await supabase.functions.invoke("send-signed-copy", {
-          body: { contractId: contract.id },
-        });
-        if (error) throw error;
+        await reloadContract();
       }
+      await invokeFunction("send-signed-copy", { contractId: contract.id });
       toast.success("Copia firmada enviada por email");
-    } catch {
-      toast.error("Error enviando copia firmada");
+    } catch (err) {
+      toast.error("Error enviando copia firmada", {
+        description: err instanceof Error ? err.message : undefined,
+      });
     } finally {
       setResendingCopy(false);
       setRegeneratingPdf(false);
@@ -663,39 +684,41 @@ export function ContractDetail() {
                           <Pencil size={14} className="mr-1" /> Editar
                         </Button>
                       )}
-                      {contract.signed_pdf_url ? (
-                        <a
-                          href={contract.signed_pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Button variant="outline" size="sm">
-                            <Download size={14} className="mr-1" />
-                            Descargar PDF
+                      {["signed", "completed"].includes(contract.status) ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={downloadPdf}
+                            disabled={regeneratingPdf}
+                          >
+                            {regeneratingPdf ? (
+                              <>
+                                <RefreshCw
+                                  size={14}
+                                  className="mr-1 animate-spin"
+                                />{" "}
+                                Preparando PDF...
+                              </>
+                            ) : (
+                              <>
+                                <Download size={14} className="mr-1" />{" "}
+                                Descargar PDF
+                              </>
+                            )}
                           </Button>
-                        </a>
-                      ) : ["signed", "completed"].includes(contract.status) ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={generatePdf}
-                          disabled={regeneratingPdf}
-                        >
-                          {regeneratingPdf ? (
-                            <>
-                              <RefreshCw
-                                size={14}
-                                className="mr-1 animate-spin"
-                              />{" "}
-                              Generando PDF...
-                            </>
-                          ) : (
-                            <>
-                              <Download size={14} className="mr-1" /> Generar
-                              PDF
-                            </>
+                          {isStoredPdf(contract.signed_pdf_url) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={generatePdf}
+                              disabled={regeneratingPdf}
+                              title="Vuelve a generar el PDF con el contenido actual"
+                            >
+                              <RefreshCw size={14} className="mr-1" /> Regenerar
+                            </Button>
                           )}
-                        </Button>
+                        </>
                       ) : null}
                     </>
                   )}
