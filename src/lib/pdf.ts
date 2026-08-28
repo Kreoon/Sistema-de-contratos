@@ -107,8 +107,11 @@ async function waitForImages(container: HTMLElement): Promise<void> {
       });
     }),
   );
-  // Un frame extra para que el layout se estabilice antes de rasterizar
-  await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+  // Una pausa para que el layout se estabilice antes de rasterizar. Se usa
+  // setTimeout y no requestAnimationFrame porque Chrome congela los frames en
+  // pestañas de segundo plano: si el firmante cambia de pestaña mientras se
+  // prepara su PDF, la generación quedaría colgada para siempre.
+  await new Promise((resolve) => setTimeout(resolve, 60));
 }
 
 /**
