@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Signature } from "@/lib/types";
 import { toast } from "sonner";
-import { downloadSignedPdf } from "@/lib/pdf";
+import { downloadSignedPdf, isStoredPdf } from "@/lib/pdf";
 
 export function SignComplete() {
   const { token } = useParams<{ token: string }>();
@@ -28,7 +28,14 @@ export function SignComplete() {
     if (!contractId) return;
     setDownloading(true);
     try {
-      await downloadSignedPdf(contractId, signedPdfUrl);
+      await downloadSignedPdf(contractId, signedPdfUrl, contractTitle);
+      if (!isStoredPdf(signedPdfUrl)) {
+        // El PDF acaba de generarse: refrescamos la URL guardada
+        const { data } = await supabase.rpc("get_signed_contract_by_token", {
+          p_token: token,
+        });
+        if (data?.[0]?.signed_pdf_url) setSignedPdfUrl(data[0].signed_pdf_url);
+      }
     } catch (err) {
       console.error("Error generando PDF:", err);
       toast.error("No se pudo descargar el PDF", {
@@ -43,26 +50,31 @@ export function SignComplete() {
     if (!token) return;
 
     async function load() {
-      const { data: contractData } = await supabase
-        .from("contracts")
-        .select("id, title, signed_pdf_url")
-        .eq("signing_token", token)
-        .single();
+      // El firmante navega sin sesión y RLS le impide leer contracts/signatures,
+      // así que los datos vienen de una función SECURITY DEFINER con el token.
+      const { data, error } = await supabase.rpc(
+        "get_signed_contract_by_token",
+        { p_token: token },
+      );
 
-      if (contractData) {
-        setContractId(contractData.id);
-        setContractTitle(contractData.title);
-        setSignedPdfUrl(contractData.signed_pdf_url);
+      if (error) console.error("Error cargando el contrato firmado:", error);
 
-        const { data: sig } = await supabase
-          .from("signatures")
-          .select("*")
-          .eq("contract_id", contractData.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
-
-        if (sig) setSignature(sig as Signature);
+      const row = data?.[0];
+      if (row) {
+        setContractId(row.id);
+        setContractTitle(row.title);
+        setSignedPdfUrl(row.signed_pdf_url);
+        if (row.document_hash) {
+          setSignature({
+            signature_type: row.signature_type,
+            consent_accepted_at: row.consent_accepted_at,
+            ip_address: row.ip_address,
+            device_info: row.device_info,
+            document_hash: row.document_hash,
+            signature_hash: row.signature_hash,
+            consent_text: row.consent_text,
+          } as Signature);
+        }
       }
       setCheckingPdf(false);
     }
