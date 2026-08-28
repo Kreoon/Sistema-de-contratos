@@ -87,6 +87,65 @@ async function loadImage(url: string): Promise<LoadedImage | null> {
   }
 }
 
+// Funciones de color modernas que html2canvas 1.x no sabe interpretar. Tailwind 4
+// genera oklch() por defecto, así que basta un color heredado para que la
+// rasterización lance "Attempting to parse an unsupported color function".
+const MODERN_COLOR_FN = /\b(?:oklch|oklab|lch|lab|color)\([^()]*\)/g;
+
+const COLOR_PROPERTIES = [
+  "color",
+  "background-color",
+  "background-image",
+  "border-top-color",
+  "border-right-color",
+  "border-bottom-color",
+  "border-left-color",
+  "outline-color",
+  "text-decoration-color",
+  "column-rule-color",
+  "caret-color",
+  "box-shadow",
+];
+
+/**
+ * Sustituye los colores modernos por su equivalente rgb() usando el canvas del
+ * navegador como conversor, para que html2canvas pueda rasterizar el contenido.
+ */
+function normalizeModernColors(root: HTMLElement): void {
+  const probe = document.createElement("canvas").getContext("2d");
+  if (!probe) return;
+
+  const cache = new Map<string, string>();
+  const toRgb = (value: string): string => {
+    const cached = cache.get(value);
+    if (cached) return cached;
+    // Si el navegador no entiende el color, fillStyle conserva el centinela
+    probe.fillStyle = "#010203";
+    probe.fillStyle = value;
+    const resolved = probe.fillStyle === "#010203" ? value : probe.fillStyle;
+    cache.set(value, resolved);
+    return resolved;
+  };
+
+  const elements: HTMLElement[] = [
+    root,
+    ...Array.from(root.querySelectorAll<HTMLElement>("*")),
+  ];
+
+  for (const element of elements) {
+    const computed = getComputedStyle(element);
+    for (const property of COLOR_PROPERTIES) {
+      const value = computed.getPropertyValue(property);
+      if (!value || !MODERN_COLOR_FN.test(value)) continue;
+      MODERN_COLOR_FN.lastIndex = 0;
+      element.style.setProperty(
+        property,
+        value.replace(MODERN_COLOR_FN, (match) => toRgb(match)),
+      );
+    }
+  }
+}
+
 /** Espera a que todas las imágenes del contenedor terminen de cargar. */
 async function waitForImages(container: HTMLElement): Promise<void> {
   const images = Array.from(container.querySelectorAll("img"));
@@ -198,6 +257,7 @@ export async function renderContractPdf(
   document.body.appendChild(container);
 
   try {
+    normalizeModernColors(container);
     await waitForImages(container);
 
     const canvas = await html2canvas(container, {
