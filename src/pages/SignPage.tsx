@@ -32,6 +32,7 @@ export function SignPage() {
   );
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [preparingPdf, setPreparingPdf] = useState(false);
   const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null);
   const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(
     null,
@@ -257,6 +258,7 @@ export function SignPage() {
       }
 
       toast.success("Contrato firmado exitosamente");
+      setPreparingPdf(true);
 
       // Generar el PDF con certificado, guardarlo y enviar la copia por email.
       // Se hace aquí (y no en el servidor) porque el PDF se rasteriza en el navegador.
@@ -467,7 +469,10 @@ export function SignPage() {
           >
             {signing ? (
               <>
-                <Loader2 className="animate-spin mr-2" size={16} /> Firmando...
+                <Loader2 className="animate-spin mr-2" size={16} />{" "}
+                {preparingPdf
+                  ? "Preparando su documento, no cierre esta ventana..."
+                  : "Firmando..."}
               </>
             ) : (
               "Firmar Contrato"
