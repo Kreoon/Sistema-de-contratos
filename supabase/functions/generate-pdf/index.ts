@@ -1,6 +1,12 @@
-import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
-import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/** Base64 -> bytes sin dependencias externas (el bundler falla al bajar deno.land). */
+function decodeBase64(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +25,7 @@ function buildFileName(title: string): string {
   return `${clean || "contrato"}.pdf`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
