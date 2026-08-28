@@ -102,9 +102,17 @@ const COLOR_PROPERTIES = [
   "border-left-color",
   "outline-color",
   "text-decoration-color",
+  "text-emphasis-color",
   "column-rule-color",
+  "row-rule-color",
   "caret-color",
+  "accent-color",
+  "fill",
+  "stroke",
   "box-shadow",
+  "text-shadow",
+  "-webkit-text-fill-color",
+  "-webkit-text-stroke-color",
 ];
 
 /**
@@ -136,12 +144,14 @@ function normalizeModernColors(root: HTMLElement): void {
     const computed = getComputedStyle(element);
     for (const property of COLOR_PROPERTIES) {
       const value = computed.getPropertyValue(property);
-      if (!value || !MODERN_COLOR_FN.test(value)) continue;
+      if (!value || !value.includes("(")) continue;
+      // La bandera /g hace que test() avance lastIndex entre llamadas, así que
+      // se comprueba directamente sobre el resultado del reemplazo.
       MODERN_COLOR_FN.lastIndex = 0;
-      element.style.setProperty(
-        property,
-        value.replace(MODERN_COLOR_FN, (match) => toRgb(match)),
+      const normalized = value.replace(MODERN_COLOR_FN, (match) =>
+        toRgb(match),
       );
+      if (normalized !== value) element.style.setProperty(property, normalized);
     }
   }
 }
