@@ -120,17 +120,26 @@ const COLOR_PROPERTIES = [
  * navegador como conversor, para que html2canvas pueda rasterizar el contenido.
  */
 function normalizeModernColors(root: HTMLElement): void {
-  const probe = document.createElement("canvas").getContext("2d");
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const probe = canvas.getContext("2d", { willReadFrequently: true });
   if (!probe) return;
 
   const cache = new Map<string, string>();
   const toRgb = (value: string): string => {
     const cached = cache.get(value);
     if (cached) return cached;
-    // Si el navegador no entiende el color, fillStyle conserva el centinela
-    probe.fillStyle = "#010203";
+    // fillStyle devuelve el oklch tal cual, pero al pintarlo el navegador sí lo
+    // resuelve: leemos el píxel para obtener el rgb equivalente.
+    probe.clearRect(0, 0, 1, 1);
     probe.fillStyle = value;
-    const resolved = probe.fillStyle === "#010203" ? value : probe.fillStyle;
+    probe.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+    const resolved =
+      a === 255
+        ? `rgb(${r}, ${g}, ${b})`
+        : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
     cache.set(value, resolved);
     return resolved;
   };
