@@ -125,23 +125,35 @@ function findPageBreak(
   minBreak: number,
 ): number {
   const searchLimit = Math.max(minBreak, idealBreak - 120);
+  const searchHeight = idealBreak - searchLimit;
+  if (searchHeight <= 0) return idealBreak;
+
+  // Una sola lectura de la franja completa: getImageData es costoso y llamarlo
+  // por fila (más de cien veces por página) bloqueaba el navegador varios
+  // minutos en contratos largos.
+  const strip = ctx.getImageData(
+    0,
+    searchLimit,
+    canvasWidth,
+    searchHeight,
+  ).data;
   const sampleStep = Math.max(1, Math.floor(canvasWidth / 120));
 
-  for (let y = idealBreak; y > searchLimit; y--) {
-    const row = ctx.getImageData(0, y, canvasWidth, 1).data;
+  for (let row = searchHeight - 1; row >= 0; row--) {
+    const base = row * canvasWidth * 4;
     let blank = true;
     for (let x = 0; x < canvasWidth; x += sampleStep) {
-      const i = x * 4;
+      const i = base + x * 4;
       // Consideramos "en blanco" cualquier píxel casi blanco o transparente
       if (
-        row[i + 3] > 12 &&
-        (row[i] < 245 || row[i + 1] < 245 || row[i + 2] < 245)
+        strip[i + 3] > 12 &&
+        (strip[i] < 245 || strip[i + 1] < 245 || strip[i + 2] < 245)
       ) {
         blank = false;
         break;
       }
     }
-    if (blank) return y;
+    if (blank) return searchLimit + row;
   }
   return idealBreak;
 }
