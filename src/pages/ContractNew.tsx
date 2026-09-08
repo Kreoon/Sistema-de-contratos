@@ -13,7 +13,13 @@ import {
 import { useTemplates } from "@/hooks/useTemplates";
 import { supabase } from "@/lib/supabase";
 import { renderTemplate } from "@/lib/template-engine";
-import { ORGANIZER } from "@/lib/organizer";
+import {
+  ISSUERS,
+  DEFAULT_ISSUER_ID,
+  getIssuer,
+  issuerToTemplateData,
+  type IssuerId,
+} from "@/lib/organizer";
 import { COUNTRIES } from "@/lib/countries";
 import { getDepartments, getCities, hasLocationData } from "@/lib/locations";
 import { moneyToWords } from "@/lib/number-to-words";
@@ -30,6 +36,10 @@ export function ContractNew() {
   const { templates, loading: loadingTemplates } = useTemplates();
   const [selectedTemplate, setSelectedTemplate] =
     useState<ContractTemplate | null>(null);
+  // Empresa emisora (razón social) con la que se genera el contrato. Es estado
+  // independiente de formData para que cambiar de plantilla no lo resetee.
+  const [issuerId, setIssuerId] = useState<IssuerId>(DEFAULT_ISSUER_ID);
+  const issuer = getIssuer(issuerId);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
@@ -236,6 +246,22 @@ export function ContractNew() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleIssuerChange = (value: string) => {
+    const next = ISSUERS.find((i) => i.id === value);
+    if (!next || next.id === issuerId) return;
+    // Con una edición manual activa, el HTML editado conserva la empresa
+    // anterior: hay que descartarlo para que el contrato refleje la nueva.
+    if (editedHtml !== null) {
+      const ok = window.confirm(
+        "Tienes una edición manual del contrato. Cambiar la empresa emisora descarta esa edición y regenera el texto desde la plantilla. ¿Continuar?",
+      );
+      if (!ok) return;
+      setEditedHtml(null);
+      setEditMode(false);
+    }
+    setIssuerId(next.id);
+  };
+
   // Generar texto de forma de pago desde cuotas
   const formaPagoFromCuotas =
     cuotas.length > 0
@@ -267,19 +293,11 @@ export function ContractNew() {
   const fmtAbono = rawAbono ? fmtMoney(rawAbono) : "";
 
   const templateData: Record<string, unknown> = {
-    org_nombre: ORGANIZER.nombre,
-    org_documento_tipo: ORGANIZER.documento_tipo,
-    org_documento: ORGANIZER.documento,
-    org_empresa: ORGANIZER.empresa,
-    org_nit: ORGANIZER.nit,
-    org_direccion: ORGANIZER.direccion,
-    org_ciudad: ORGANIZER.ciudad,
-    org_departamento: ORGANIZER.departamento,
-    org_pais: ORGANIZER.pais,
-    org_email: ORGANIZER.email,
-    org_telefono: ORGANIZER.telefono,
-    org_lugar_evento: ORGANIZER.lugar_evento,
     ...formData,
+    // Datos de la empresa emisora (org_*). Van después de formData porque son
+    // automáticos: la empresa elegida siempre gana aunque una plantilla
+    // declare variables org_* editables.
+    ...issuerToTemplateData(issuer),
     // Montos formateados para el contrato
     ...(rawTotal
       ? {
@@ -445,6 +463,7 @@ export function ContractNew() {
       .insert({
         template_id: selectedTemplate.id,
         contact_id: contactId,
+        issuer_id: issuerId,
         title,
         signer_name: signerName,
         signer_email: signerEmail,
@@ -666,6 +685,25 @@ export function ContractNew() {
                   </option>
                 ))}
               </Select>
+              <div className="space-y-1">
+                <Label htmlFor="issuer" className="text-xs">
+                  Empresa emisora *
+                </Label>
+                <Select
+                  id="issuer"
+                  value={issuerId}
+                  onChange={(e) => handleIssuerChange(e.target.value)}
+                >
+                  {ISSUERS.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  {issuer.empresa} · NIT {issuer.nit}
+                </p>
+              </div>
               {selectedTemplate &&
                 selectedTemplate.variables.some((v) => v.key === "anio") && (
                   <div className="space-y-1">
@@ -1177,6 +1215,12 @@ export function ContractNew() {
                     </strong>
                     {signerCompany ? ` · ${signerCompany}` : ""}
                     {signerEmail ? ` · ${signerEmail}` : ""}
+                    <br />
+                    Emite:{" "}
+                    <strong className="text-[hsl(var(--foreground))]">
+                      {issuer.empresa}
+                    </strong>{" "}
+                    · NIT {issuer.nit}
                   </div>
                 )}
               </CardContent>

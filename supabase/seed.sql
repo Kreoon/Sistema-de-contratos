@@ -282,7 +282,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     </tbody>
   </table>
 
-  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico —el cual no constituye arrendamiento— se celebra entre <strong>EFFIX S.A.S.</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico —el cual no constituye arrendamiento— se celebra entre <strong>{{org_empresa}}</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
 
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CONSIDERACIONES</h3>
   <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE ha suscrito contrato con Plaza Mayor Medellín Convenciones y Exposiciones S.A. para el uso de sus instalaciones durante el período del evento. En virtud de lo anterior, EL CONCESIONARIO conoce y acepta que las condiciones de uso del espacio físico están sujetas al reglamento interno de Plaza Mayor, cuyo Anexo 1 hace parte integral del presente contrato.</p>
@@ -571,7 +571,7 @@ INSERT INTO contract_templates (name, slug, description, content, variables) VAL
     </tbody>
   </table>
 
-  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico y alianza estratégica —el cual no constituye arrendamiento— se celebra entre <strong>EFFIX S.A.S.</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
+  <p style="text-align: justify; margin-bottom: 24px;">El presente contrato de concesión mercantil de espacio físico y alianza estratégica —el cual no constituye arrendamiento— se celebra entre <strong>{{org_empresa}}</strong>, identificada con NIT {{org_nit}}, representada por <strong>{{org_nombre}}</strong>, identificado(a) con {{org_documento}}, en adelante <strong>EL CONCEDENTE</strong>; y el titular identificado en la sección de Información General, en adelante <strong>EL CONCESIONARIO</strong>.</p>
 
   <h3 style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 32px; margin-bottom: 8px;">CONSIDERACIONES</h3>
   <p style="text-align: justify; margin-bottom: 24px;">EL CONCEDENTE ha suscrito contrato con Plaza Mayor Medellín Convenciones y Exposiciones S.A. para el uso de sus instalaciones durante el período del evento. EL CONCESIONARIO conoce y acepta que las condiciones de uso del espacio físico están sujetas al reglamento interno de Plaza Mayor, cuyo Anexo 1 hace parte integral del presente contrato.</p>

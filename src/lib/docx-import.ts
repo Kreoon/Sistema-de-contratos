@@ -45,7 +45,8 @@ export const SOURCE_INFO: Record<
 > = {
   organizador: {
     label: "Automático",
-    description: "Se completa solo con los datos de EFFIX S.A.S.",
+    description:
+      "Se completa solo con los datos de la empresa emisora elegida al crear el contrato",
   },
   contacto: {
     label: "Contacto",
@@ -74,13 +75,18 @@ export const SOURCE_INFO: Record<
 };
 
 export const KNOWN_VARIABLES: KnownVariable[] = [
-  // --- Organizador (EFFIX). Se inyectan siempre, no se piden al usuario ---
+  // --- Organizador (empresa emisora). Se inyectan siempre, no se piden al usuario ---
   {
     key: "org_empresa",
-    label: "Empresa organizadora",
+    label: "Empresa organizadora (emisora)",
     type: "text",
     source: "organizador",
-    aliases: ["effix", "empresa organizadora", "contratante"],
+    aliases: [
+      "effix",
+      "empresa organizadora",
+      "empresa emisora",
+      "contratante",
+    ],
   },
   {
     key: "org_nit",

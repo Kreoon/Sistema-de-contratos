@@ -1,3 +1,5 @@
+import type { IssuerId } from "./organizer";
+
 export interface ContractTemplate {
   id: string;
   name: string;
@@ -35,6 +37,8 @@ export interface Contract {
   signer_email: string;
   signer_document_id: string | null;
   signer_company: string | null;
+  /** Empresa emisora (razón social) con la que se generó el contrato */
+  issuer_id: IssuerId;
   contract_data: Record<string, string>;
   rendered_html: string | null;
   status: ContractStatus;

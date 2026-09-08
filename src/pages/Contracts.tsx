@@ -1,28 +1,34 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
-import { useContracts } from '@/hooks/useContracts'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
-import { Card, CardContent } from '@/components/ui/card'
-import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
-import type { ContractStatus } from '@/lib/types'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Plus, Search } from "lucide-react";
+import { useContracts } from "@/hooks/useContracts";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
+import { IssuerBadge } from "@/components/contracts/IssuerBadge";
+import { ISSUERS, type IssuerId } from "@/lib/organizer";
+import type { ContractStatus } from "@/lib/types";
 
 export function Contracts() {
-  const [status, setStatus] = useState<ContractStatus | ''>('')
-  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState<ContractStatus | "">("");
+  const [issuerId, setIssuerId] = useState<IssuerId | "">("");
+  const [search, setSearch] = useState("");
   const { contracts, loading } = useContracts({
     status: status || undefined,
+    issuerId: issuerId || undefined,
     search: search || undefined,
-  })
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Contratos</h1>
-          <p className="text-[hsl(var(--muted-foreground))]">{contracts.length} contrato(s)</p>
+          <p className="text-[hsl(var(--muted-foreground))]">
+            {contracts.length} contrato(s)
+          </p>
         </div>
         <Link to="/contracts/new">
           <Button>
@@ -47,7 +53,7 @@ export function Contracts() {
         </div>
         <Select
           value={status}
-          onChange={(e) => setStatus(e.target.value as ContractStatus | '')}
+          onChange={(e) => setStatus(e.target.value as ContractStatus | "")}
           className="w-full sm:w-48"
         >
           <option value="">Todos los estados</option>
@@ -57,6 +63,18 @@ export function Contracts() {
           <option value="signed">Firmado</option>
           <option value="completed">Completado</option>
           <option value="cancelled">Cancelado</option>
+        </Select>
+        <Select
+          value={issuerId}
+          onChange={(e) => setIssuerId(e.target.value as IssuerId | "")}
+          className="w-full sm:w-52"
+        >
+          <option value="">Todas las empresas</option>
+          {ISSUERS.map((issuer) => (
+            <option key={issuer.id} value={issuer.id}>
+              {issuer.label}
+            </option>
+          ))}
         </Select>
       </div>
 
@@ -76,6 +94,7 @@ export function Contracts() {
                 <thead>
                   <tr className="border-b bg-[hsl(var(--secondary))]">
                     <th className="p-3 text-left font-medium">Título</th>
+                    <th className="p-3 text-left font-medium">Empresa</th>
                     <th className="p-3 text-left font-medium">Firmante</th>
                     <th className="p-3 text-left font-medium">Email</th>
                     <th className="p-3 text-left font-medium">Estado</th>
@@ -96,6 +115,9 @@ export function Contracts() {
                           {contract.title}
                         </Link>
                       </td>
+                      <td className="p-3">
+                        <IssuerBadge issuerId={contract.issuer_id} />
+                      </td>
                       <td className="p-3">{contract.signer_name}</td>
                       <td className="p-3 text-[hsl(var(--muted-foreground))]">
                         {contract.signer_email}
@@ -104,7 +126,9 @@ export function Contracts() {
                         <ContractStatusBadge status={contract.status} />
                       </td>
                       <td className="p-3 text-[hsl(var(--muted-foreground))]">
-                        {new Date(contract.created_at).toLocaleDateString('es-CO')}
+                        {new Date(contract.created_at).toLocaleDateString(
+                          "es-CO",
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -115,5 +139,5 @@ export function Contracts() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

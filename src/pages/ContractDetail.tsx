@@ -27,6 +27,7 @@ import type {
   ContractStatus,
 } from "@/lib/types";
 import { injectContractBranding } from "@/lib/template-engine";
+import { getIssuer } from "@/lib/organizer";
 import {
   downloadSignedPdf,
   generateAndStoreSignedPdf,
@@ -304,6 +305,13 @@ export function ContractDetail() {
                   {contract.signer_company}
                 </div>
               )}
+              <div className="pt-2 border-t">
+                <span className="text-[hsl(var(--muted-foreground))]">
+                  Emitido por:{" "}
+                </span>
+                {getIssuer(contract.issuer_id).empresa} · NIT{" "}
+                {getIssuer(contract.issuer_id).nit}
+              </div>
             </CardContent>
           </Card>
 

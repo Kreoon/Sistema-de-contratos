@@ -637,7 +637,7 @@ export function TemplateImport() {
             <CardContent className="space-y-4">
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
                 El resto de variables las completa el sistema con los datos de
-                EFFIX, del contacto elegido y de la forma de pago.
+                la empresa emisora, del contacto elegido y de la forma de pago.
               </p>
               {manualKeys.length === 0 ? (
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
