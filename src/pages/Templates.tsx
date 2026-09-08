@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, FileText, Trash2, Upload } from "lucide-react";
+import { Copy, Eye, EyeOff, FileText, Trash2, Upload } from "lucide-react";
 import { useTemplates } from "@/hooks/useTemplates";
 import { supabase } from "@/lib/supabase";
+import { slugify } from "@/lib/docx-import";
 import {
   Card,
   CardContent,
@@ -40,6 +41,49 @@ export function Templates() {
         ? `"${template.name}" ya no aparece al crear contratos`
         : `"${template.name}" vuelve a estar disponible`,
     );
+    refetch();
+  };
+
+  /** Identificador libre a partir del nombre: "x", "x-2", "x-3"... */
+  const uniqueSlug = (name: string) => {
+    const base = slugify(name) || "plantilla";
+    const taken = new Set(templates.map((t) => t.slug));
+    if (!taken.has(base)) return base;
+    let n = 2;
+    while (taken.has(`${base}-${n}`)) n++;
+    return `${base}-${n}`;
+  };
+
+  const duplicate = async (template: ContractTemplate) => {
+    const name = window.prompt(
+      "Nombre de la nueva plantilla:",
+      `${template.name} (copia)`,
+    );
+    if (name === null) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast.error("La plantilla necesita un nombre");
+      return;
+    }
+
+    setBusyId(template.id);
+    const { error } = await supabase.from("contract_templates").insert({
+      name: trimmed,
+      slug: uniqueSlug(trimmed),
+      description: template.description,
+      content: template.content,
+      variables: template.variables,
+      is_active: true,
+    });
+    setBusyId(null);
+
+    if (error) {
+      toast.error("No se pudo duplicar", { description: error.message });
+      return;
+    }
+    toast.success(`Plantilla "${trimmed}" creada`, {
+      description: "Copia el contenido y los campos de la original.",
+    });
     refetch();
   };
 
@@ -156,6 +200,14 @@ export function Templates() {
                       <Eye size={14} className="mr-1.5" /> Activar
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busyId === template.id}
+                  onClick={() => duplicate(template)}
+                >
+                  <Copy size={14} className="mr-1.5" /> Duplicar
                 </Button>
                 <Button
                   variant="ghost"
