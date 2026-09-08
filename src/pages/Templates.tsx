@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff, FileText, Trash2, Upload } from "lucide-react";
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  FileText,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { useTemplates } from "@/hooks/useTemplates";
 import { supabase } from "@/lib/supabase";
 import { slugify } from "@/lib/docx-import";
@@ -184,7 +192,12 @@ export function Templates() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 pt-2 border-t">
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+                <Link to={`/templates/${template.id}/edit`}>
+                  <Button variant="ghost" size="sm">
+                    <Pencil size={14} className="mr-1.5" /> Editar
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"

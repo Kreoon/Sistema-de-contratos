@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -44,7 +44,7 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/contracts/RichTextEditor";
-import type { TemplateVariable } from "@/lib/types";
+import type { ContractTemplate, TemplateVariable } from "@/lib/types";
 
 // Valor especial del selector de marcadores: crear una variable propia
 const CUSTOM = "__custom__";
@@ -70,12 +70,20 @@ function SourceBadge({ source }: { source: VariableSource }) {
   );
 }
 
+/**
+ * Importar una plantilla desde Word o, con `/templates/:id/edit`, editar una
+ * existente: el mismo editor de contenido y de campos, cargado con la
+ * plantilla y guardando con update en lugar de insert.
+ */
 export function TemplateImport() {
   const navigate = useNavigate();
+  const { id: editingId } = useParams<{ id: string }>();
+  const isEdit = Boolean(editingId);
   const editorRef = useRef<RichTextEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(isEdit ? 2 : 1);
+  const [loadingTemplate, setLoadingTemplate] = useState(isEdit);
   const [fileName, setFileName] = useState("");
   const [converting, setConverting] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -106,6 +114,69 @@ export function TemplateImport() {
     [usedKeys],
   );
   const pendingPlaceholders = placeholders.filter((p) => html.includes(p.raw));
+  // Al editar se pueden ajustar todos los campos de la plantilla, no solo los
+  // manuales (los del organizador se inyectan solos y no se guardan).
+  const editableKeys = useMemo(
+    () =>
+      isEdit
+        ? usedKeys.filter((key) => getVariableSource(key) !== "organizador")
+        : manualKeys,
+    [isEdit, usedKeys, manualKeys],
+  );
+
+  // --- Modo edición: cargar la plantilla existente ---
+  useEffect(() => {
+    if (!editingId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("contract_templates")
+        .select("*")
+        .eq("id", editingId)
+        .single();
+      if (cancelled) return;
+      if (error || !data) {
+        toast.error("No se encontró la plantilla", {
+          description: error?.message,
+        });
+        navigate("/templates");
+        return;
+      }
+      const template = data as ContractTemplate;
+      setHtml(template.content);
+      setName(template.name);
+      setSlug(template.slug);
+      setSlugTouched(true);
+      setDescription(template.description ?? "");
+      // Los campos guardados pasan a ser los valores iniciales del panel
+      setOverrides(
+        Object.fromEntries(
+          template.variables.map((v) => [
+            v.key,
+            {
+              label: v.label,
+              type: v.type,
+              required: v.required,
+              ...(v.placeholder ? { placeholder: v.placeholder } : {}),
+              ...(v.options?.length ? { options: v.options } : {}),
+            } satisfies Partial<TemplateVariable>,
+          ]),
+        ),
+      );
+      // Marcadores del Word que hayan quedado sin resolver en su día
+      const detected = detectPlaceholders(template.content);
+      setPlaceholders(detected);
+      setMapping(
+        Object.fromEntries(
+          detected.map((p) => [p.raw, p.suggestedKey ?? ""] as const),
+        ),
+      );
+      setLoadingTemplate(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editingId, navigate]);
 
   // --- Paso 1: convertir el .docx ---
   const handleFile = async (file: File) => {
@@ -230,18 +301,25 @@ export function TemplateImport() {
 
     setSaving(true);
     const variables = buildTemplateVariables(usedKeys, overrides);
-    const { data, error } = await supabase
-      .from("contract_templates")
-      .insert({
-        name: trimmedName,
-        slug: finalSlug,
-        description: description.trim() || null,
-        content: html,
-        variables,
-        is_active: true,
-      })
-      .select("id")
-      .single();
+    const payload = {
+      name: trimmedName,
+      slug: finalSlug,
+      description: description.trim() || null,
+      content: html,
+      variables,
+    };
+    const { data, error } = isEdit
+      ? await supabase
+          .from("contract_templates")
+          .update(payload)
+          .eq("id", editingId!)
+          .select("id")
+          .single()
+      : await supabase
+          .from("contract_templates")
+          .insert({ ...payload, is_active: true })
+          .select("id")
+          .single();
     setSaving(false);
 
     if (error) {
@@ -254,19 +332,38 @@ export function TemplateImport() {
       return;
     }
 
-    toast.success("Plantilla creada", {
-      description: `"${trimmedName}" ya aparece al crear un contrato nuevo.`,
-    });
+    if (isEdit) {
+      toast.success("Plantilla actualizada", {
+        description:
+          "Los contratos ya generados conservan su texto; los nuevos usarán esta versión.",
+      });
+    } else {
+      toast.success("Plantilla creada", {
+        description: `"${trimmedName}" ya aparece al crear un contrato nuevo.`,
+      });
+    }
     navigate("/templates", { state: { createdId: data?.id } });
   };
+
+  if (loadingTemplate) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--primary))]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Importar plantilla</h1>
+          <h1 className="text-2xl font-bold">
+            {isEdit ? "Editar plantilla" : "Importar plantilla"}
+          </h1>
           <p className="text-[hsl(var(--muted-foreground))]">
-            Sube un contrato en Word y conviértelo en una plantilla reutilizable
+            {isEdit
+              ? "Cambia el texto, las variables y los datos de la plantilla"
+              : "Sube un contrato en Word y conviértelo en una plantilla reutilizable"}
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/templates")}>
@@ -280,28 +377,30 @@ export function TemplateImport() {
           { n: 1 as const, label: "Archivo" },
           { n: 2 as const, label: "Contenido y variables" },
           { n: 3 as const, label: "Datos y guardado" },
-        ].map((s, i) => (
-          <div key={s.n} className="flex items-center gap-2">
-            {i > 0 && (
-              <span className="text-[hsl(var(--muted-foreground))]">—</span>
-            )}
-            <button
-              type="button"
-              disabled={s.n > 1 && !html}
-              onClick={() => setStep(s.n)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                step === s.n
-                  ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                  : "hover:bg-[hsl(var(--secondary))]"
-              }`}
-            >
-              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border text-xs">
-                {step > s.n ? <Check size={12} /> : s.n}
-              </span>
-              {s.label}
-            </button>
-          </div>
-        ))}
+        ]
+          .filter((s) => !isEdit || s.n > 1)
+          .map((s, i) => (
+            <div key={s.n} className="flex items-center gap-2">
+              {i > 0 && (
+                <span className="text-[hsl(var(--muted-foreground))]">—</span>
+              )}
+              <button
+                type="button"
+                disabled={s.n > 1 && !html}
+                onClick={() => setStep(s.n)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  step === s.n
+                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                    : "hover:bg-[hsl(var(--secondary))]"
+                }`}
+              >
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border text-xs">
+                  {step > s.n ? <Check size={12} /> : s.n}
+                </span>
+                {s.label}
+              </button>
+            </div>
+          ))}
       </div>
 
       {/* ---------- Paso 1: archivo ---------- */}
@@ -564,9 +663,15 @@ export function TemplateImport() {
           </div>
 
           <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)}>
-              <ArrowLeft size={16} className="mr-2" /> Cambiar archivo
-            </Button>
+            {isEdit ? (
+              <Button variant="outline" onClick={() => navigate("/templates")}>
+                <ArrowLeft size={16} className="mr-2" /> Cancelar
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setStep(1)}>
+                <ArrowLeft size={16} className="mr-2" /> Cambiar archivo
+              </Button>
+            )}
             <Button onClick={() => setStep(3)}>
               Continuar <ArrowRight size={16} className="ml-2" />
             </Button>
@@ -631,35 +736,45 @@ export function TemplateImport() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Campos que se pedirán a mano ({manualKeys.length})
+                {isEdit
+                  ? `Campos de la plantilla (${editableKeys.length})`
+                  : `Campos que se pedirán a mano (${manualKeys.length})`}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                El resto de variables las completa el sistema con los datos de
-                la empresa emisora, del contacto elegido y de la forma de pago.
+                {isEdit
+                  ? "Los datos de la empresa emisora se inyectan solos y no aparecen aquí. Los campos de contacto, pago y stand se completan en sus secciones al crear el contrato; los manuales se piden aparte."
+                  : "El resto de variables las completa el sistema con los datos de la empresa emisora, del contacto elegido y de la forma de pago."}
               </p>
-              {manualKeys.length === 0 ? (
+              {editableKeys.length === 0 ? (
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
                   No hay campos manuales: todo se completa solo.
                 </p>
               ) : (
-                manualKeys.map((key) => {
+                editableKeys.map((key) => {
                   const override = overrides[key] ?? {};
+                  const known = getKnownVariable(key);
+                  const source = getVariableSource(key);
                   return (
                     <div
                       key={key}
                       className="space-y-2 pb-3 border-b last:border-0"
                     >
-                      <code className="text-xs bg-[hsl(var(--secondary))] px-1.5 py-0.5 rounded">
-                        {`{{${key}}}`}
-                      </code>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-[hsl(var(--secondary))] px-1.5 py-0.5 rounded">
+                          {`{{${key}}}`}
+                        </code>
+                        {isEdit && <SourceBadge source={source} />}
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <Label className="text-xs">Etiqueta</Label>
                           <Input
                             className="h-9 text-xs"
-                            value={override.label ?? humanizeKey(key)}
+                            value={
+                              override.label ?? known?.label ?? humanizeKey(key)
+                            }
                             onChange={(e) =>
                               setOverride(key, { label: e.target.value })
                             }
@@ -669,7 +784,7 @@ export function TemplateImport() {
                           <Label className="text-xs">Tipo</Label>
                           <Select
                             className="h-9 text-xs"
-                            value={override.type ?? "text"}
+                            value={override.type ?? known?.type ?? "text"}
                             onChange={(e) =>
                               setOverride(key, {
                                 type: e.target
@@ -686,7 +801,7 @@ export function TemplateImport() {
                           </Select>
                         </div>
                       </div>
-                      {override.type === "select" && (
+                      {(override.type ?? known?.type) === "select" && (
                         <div className="space-y-1">
                           <Label className="text-xs">
                             Opciones (una por línea)
@@ -694,7 +809,11 @@ export function TemplateImport() {
                           <Textarea
                             rows={3}
                             className="text-xs"
-                            value={(override.options ?? []).join("\n")}
+                            value={(
+                              override.options ??
+                              known?.options ??
+                              []
+                            ).join("\n")}
                             onChange={(e) =>
                               setOverride(key, {
                                 options: e.target.value
@@ -708,7 +827,9 @@ export function TemplateImport() {
                       )}
                       <label className="flex items-center gap-2 text-xs">
                         <Checkbox
-                          checked={override.required ?? true}
+                          checked={
+                            override.required ?? known?.defaultRequired ?? true
+                          }
                           onChange={(e) =>
                             setOverride(key, { required: e.target.checked })
                           }
@@ -732,7 +853,7 @@ export function TemplateImport() {
               ) : (
                 <Save size={16} className="mr-2" />
               )}
-              Guardar plantilla
+              {isEdit ? "Guardar cambios" : "Guardar plantilla"}
             </Button>
           </div>
         </div>

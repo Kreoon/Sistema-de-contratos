@@ -27,6 +27,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: "templates", element: <Templates /> },
       { path: "templates/import", element: <TemplateImport /> },
+      { path: "templates/:id/edit", element: <TemplateImport /> },
       { path: "contracts", element: <Contracts /> },
       { path: "contracts/new", element: <ContractNew /> },
       { path: "contracts/:id", element: <ContractDetail /> },
