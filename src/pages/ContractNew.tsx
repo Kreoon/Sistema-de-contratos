@@ -387,6 +387,15 @@ export function ContractNew() {
     "tipo_patrocinio",
   ];
 
+  // La persona encargada solo se pide si la plantilla la imprime: la mayoría de
+  // contratos no la usan y el formulario ya es largo.
+  const usesEncargada =
+    selectedTemplate?.variables.some((v) =>
+      ["persona_encargada", "email_encargada", "celular_encargada"].includes(
+        v.key,
+      ),
+    ) ?? false;
+
   const visibleVariables =
     selectedTemplate?.variables.filter((v) => {
       if (paymentKeys.includes(v.key)) return false;
@@ -1201,6 +1210,85 @@ export function ContractNew() {
                             />
                           </div>
                         </div>
+
+                        {/* 5. Persona encargada (solo si la plantilla la usa) */}
+                        {usesEncargada && (
+                          <>
+                            <hr className="my-1" />
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
+                                Persona encargada (contacto directo)
+                              </p>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const nombre =
+                                    formData.tipo_persona === "Persona Jurídica"
+                                      ? formData.representante_legal
+                                      : formData.nombre_completo;
+                                  if (nombre)
+                                    handleFieldChange(
+                                      "persona_encargada",
+                                      nombre,
+                                    );
+                                  if (formData.email)
+                                    handleFieldChange(
+                                      "email_encargada",
+                                      formData.email,
+                                    );
+                                  if (formData.celular)
+                                    handleFieldChange(
+                                      "celular_encargada",
+                                      formData.celular,
+                                    );
+                                }}
+                              >
+                                Misma persona del contrato
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Nombre</Label>
+                                <Input
+                                  value={formData.persona_encargada || ""}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      "persona_encargada",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Email</Label>
+                                <Input
+                                  type="email"
+                                  value={formData.email_encargada || ""}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      "email_encargada",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Celular</Label>
+                                <Input
+                                  value={formData.celular_encargada || ""}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      "celular_encargada",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
                   </>
